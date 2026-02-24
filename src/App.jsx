@@ -1,0 +1,199 @@
+import { useState, createContext, useContext } from 'react'
+import Navbar from './components/Navbar'
+import Hero from './components/Hero'
+import MatchesSection from './components/MatchesSection'
+import Footer from './components/Footer'
+import MatchDetailsPage from './pages/MatchDetailsPage'
+import SeatSelectionPage from './pages/SeatSelectionPage'
+import CheckoutPage from './pages/CheckoutPage'
+import ConfirmationPage from './pages/ConfirmationPage'
+import AdminPanel from './pages/AdminPanel'
+
+const AppContext = createContext()
+
+export const useAppContext = () => useContext(AppContext)
+
+const matches = [
+  {
+    id: 1,
+    team1: 'Mumbai Indians',
+    team2: 'Chennai Super Kings',
+    team1Short: 'MI',
+    team2Short: 'CSK',
+    date: '2024-03-15',
+    time: '7:30 PM',
+    stadium: 'Wankhede Stadium',
+    city: 'Mumbai',
+    startingPrice: 1500,
+    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800',
+    categories: [
+      { name: 'Platinum', price: 8000, rows: 5, seatsPerRow: 20 },
+      { name: 'Gold', price: 5000, rows: 8, seatsPerRow: 25 },
+      { name: 'Silver', price: 3000, rows: 10, seatsPerRow: 30 },
+      { name: 'General', price: 1500, rows: 15, seatsPerRow: 40 }
+    ]
+  },
+  {
+    id: 2,
+    team1: 'Royal Challengers Bangalore',
+    team2: 'Kolkata Knight Riders',
+    team1Short: 'RCB',
+    team2Short: 'KKR',
+    date: '2024-03-16',
+    time: '7:30 PM',
+    stadium: 'M Chinnaswamy Stadium',
+    city: 'Bangalore',
+    startingPrice: 1200,
+    image: 'https://images.unsplash.com/photo-1540747913341-32f8eafd4be5?w=800',
+    categories: [
+      { name: 'Platinum', price: 7000, rows: 5, seatsPerRow: 20 },
+      { name: 'Gold', price: 4500, rows: 8, seatsPerRow: 25 },
+      { name: 'Silver', price: 2500, rows: 10, seatsPerRow: 30 },
+      { name: 'General', price: 1200, rows: 15, seatsPerRow: 40 }
+    ]
+  },
+  {
+    id: 3,
+    team1: 'Delhi Capitals',
+    team2: 'Rajasthan Royals',
+    team1Short: 'DC',
+    team2Short: 'RR',
+    date: '2024-03-17',
+    time: '3:30 PM',
+    stadium: 'Arun Jaitley Stadium',
+    city: 'Delhi',
+    startingPrice: 1000,
+    image: 'https://images.unsplash.com/photo-1562077772-3f0d5e7f0f1f?w=800',
+    categories: [
+      { name: 'Platinum', price: 6000, rows: 5, seatsPerRow: 20 },
+      { name: 'Gold', price: 4000, rows: 8, seatsPerRow: 25 },
+      { name: 'Silver', price: 2200, rows: 10, seatsPerRow: 30 },
+      { name: 'General', price: 1000, rows: 15, seatsPerRow: 40 }
+    ]
+  },
+  {
+    id: 4,
+    team1: 'Punjab Kings',
+    team2: 'Sunrisers Hyderabad',
+    team1Short: 'PBKS',
+    team2Short: 'SRH',
+    date: '2024-03-18',
+    time: '7:30 PM',
+    stadium: 'PCA Stadium',
+    city: 'Mohali',
+    startingPrice: 800,
+    image: 'https://images.unsplash.com/photo-1587280507867-0a8e0b8b8b8b?w=800',
+    categories: [
+      { name: 'Platinum', price: 5500, rows: 5, seatsPerRow: 20 },
+      { name: 'Gold', price: 3500, rows: 8, seatsPerRow: 25 },
+      { name: 'Silver', price: 2000, rows: 10, seatsPerRow: 30 },
+      { name: 'General', price: 800, rows: 15, seatsPerRow: 40 }
+    ]
+  }
+]
+
+const cities = ['All Cities', 'Mumbai', 'Bangalore', 'Delhi', 'Mohali', 'Chennai', 'Kolkata', 'Hyderabad']
+const stadiums = ['All Stadiums', 'Wankhede Stadium', 'M Chinnaswamy Stadium', 'Arun Jaitley Stadium', 'PCA Stadium', 'Chepauk', 'Eden Gardens']
+
+function App() {
+  const [currentView, setCurrentView] = useState('home')
+  const [selectedMatch, setSelectedMatch] = useState(null)
+  const [selectedCity, setSelectedCity] = useState('All Cities')
+  const [selectedStadium, setSelectedStadium] = useState('All Stadiums')
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedSeats, setSelectedSeats] = useState([])
+  const [currentBooking, setCurrentBooking] = useState(null)
+  const [bookings, setBookings] = useState([])
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  const toggleSeatSelection = (seat) => {
+    setSelectedSeats(prev => {
+      const exists = prev.find(s => s.id === seat.id)
+      if (exists) {
+        return prev.filter(s => s.id !== seat.id)
+      }
+      if (prev.length >= 10) return prev
+      return [...prev, seat]
+    })
+  }
+
+  const clearSeatSelection = () => setSelectedSeats([])
+
+  const addBooking = (booking) => {
+    setBookings(prev => [...prev, booking])
+    setCurrentBooking(booking)
+  }
+
+  const deleteMatch = (matchId) => {
+    // Implementation for admin
+  }
+
+  const contextValue = {
+    matches,
+    cities,
+    stadiums,
+    currentView,
+    setCurrentView,
+    selectedMatch,
+    setSelectedMatch,
+    selectedCity,
+    setSelectedCity,
+    selectedStadium,
+    setSelectedStadium,
+    selectedCategory,
+    setSelectedCategory,
+    selectedSeats,
+    toggleSeatSelection,
+    clearSeatSelection,
+    currentBooking,
+    addBooking,
+    bookings,
+    isAdmin,
+    setIsAdmin,
+    deleteMatch
+  }
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'home':
+        return (
+          <>
+            <Hero />
+            <MatchesSection />
+          </>
+        )
+      case 'match-details':
+        return <MatchDetailsPage />
+      case 'seat-selection':
+        return <SeatSelectionPage />
+      case 'checkout':
+        return <CheckoutPage />
+      case 'confirmation':
+        return <ConfirmationPage />
+      case 'admin-bookings':
+      case 'admin':
+        return <AdminPanel />
+      default:
+        return (
+          <>
+            <Hero />
+            <MatchesSection />
+          </>
+        )
+    }
+  }
+
+  return (
+    <AppContext.Provider value={contextValue}>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main>
+          {renderView()}
+        </main>
+        {currentView === 'home' && <Footer />}
+      </div>
+    </AppContext.Provider>
+  )
+}
+
+export default App
