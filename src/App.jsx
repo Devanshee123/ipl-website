@@ -29,7 +29,7 @@ const initialMatches = [
     stadium: 'Wankhede Stadium',
     city: 'Mumbai',
     startingPrice: 1500,
-    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800',
+    image: '/images/match-mi-csk.jpg',
     categories: [
       { name: 'Platinum', price: 8000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 5000, rows: 8, seatsPerRow: 25 },
@@ -48,7 +48,7 @@ const initialMatches = [
     stadium: 'M Chinnaswamy Stadium',
     city: 'Bangalore',
     startingPrice: 1200,
-    image: 'https://images.unsplash.com/photo-1540747913341-32f8eafd4be5?w=800',
+    image: '/images/match-rcb-kkr.jpg',
     categories: [
       { name: 'Platinum', price: 7000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 4500, rows: 8, seatsPerRow: 25 },
@@ -67,7 +67,7 @@ const initialMatches = [
     stadium: 'Arun Jaitley Stadium',
     city: 'Delhi',
     startingPrice: 1000,
-    image: 'https://images.unsplash.com/photo-1562077772-3f0d5e7f0f1f?w=800',
+    image: '/images/match-dc-pbks.jpg',
     categories: [
       { name: 'Platinum', price: 6000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 4000, rows: 8, seatsPerRow: 25 },
@@ -86,7 +86,7 @@ const initialMatches = [
     stadium: 'PCA Stadium',
     city: 'Mohali',
     startingPrice: 800,
-    image: 'https://images.unsplash.com/photo-1587280507867-0a8e0b8b8b8b?w=800',
+    image: '/images/match-rr-gt.jpg',
     categories: [
       { name: 'Platinum', price: 5500, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 3500, rows: 8, seatsPerRow: 25 },

@@ -6,32 +6,38 @@ export default function Hero() {
 
   return (
     <section className="relative bg-gradient-to-br from-[#F84464] to-[#E03454] text-white overflow-hidden">
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '40px 40px'
-        }} />
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="/images/hero-stadium.jpg" 
+          alt="Stadium" 
+          className="w-full h-full object-cover"
+        />
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
         <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Book Your IPL Tickets Now
+          <span className="inline-flex items-center gap-2 px-3 py-1 bg-white text-gray-800 rounded-full text-sm font-medium mb-4 border border-white/30">
+            <span className="w-2 h-2 bg-[#F84464] rounded-full"></span>
+            Live Sports 2024
+          </span>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
+            Experience Live Cricket Like Never Before
           </h1>
-          <p className="text-lg sm:text-xl text-white/90 mb-8 leading-relaxed">
-            Experience the thrill of live cricket. Secure your seats for the most exciting matches of the season.
+          <p className="text-base sm:text-lg text-white/80 mb-6 leading-relaxed max-w-lg">
+            Book tickets for IPL matches, international games, and more at the best stadiums across India.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setCurrentView('home')}
-              className="px-6 py-3 bg-white text-[#F84464] font-semibold rounded-md hover:bg-white/90 transition-all duration-200 active:scale-[0.98] flex items-center gap-2"
+              className="px-5 py-2.5 bg-[#F84464] text-white font-medium rounded-md hover:bg-[#E03454] transition-all duration-200 flex items-center gap-2"
             >
               Book Now
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => setCurrentView('admin-bookings')}
-              className="px-6 py-3 bg-white/20 text-white font-semibold rounded-md hover:bg-white/30 transition-all duration-200"
+              className="px-5 py-2.5 bg-white text-[#333333] font-medium rounded-md hover:bg-gray-100 transition-all duration-200"
             >
               My Bookings
             </button>

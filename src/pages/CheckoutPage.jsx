@@ -183,7 +183,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white border-b border-[#E5E5E5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <button
             onClick={() => setCurrentView('seat-selection')}
             className="flex items-center gap-2 text-[#666666] hover:text-[#222222] transition-colors"
@@ -194,18 +194,41 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Form */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Contact Details */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form onSubmit={handlePayment} className="space-y-6">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Side - Event Details */}
             <div className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E5E5E5] bg-[#F5F5F5]">
-                <h2 className="font-medium text-[#222222]">Contact Details</h2>
+              <div className="p-6">
+                <div className="flex items-start gap-4">
+                  <img
+                    src={selectedMatch.image}
+                    alt="Match"
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-[#222222] mb-2">
+                      {selectedMatch.team1} vs {selectedMatch.team2}
+                    </h2>
+                    <div className="space-y-1 text-sm text-[#666666]">
+                      <p>{selectedMatch.stadium}</p>
+                      <p>{new Date(selectedMatch.date).toLocaleDateString()} • {selectedMatch.time}</p>
+                      <p>{selectedSeats.length} seats</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="p-4 space-y-4">
+            </div>
+
+            {/* Right Side - Contact Details */}
+            <div className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#E5E5E5] bg-[#F5F5F5]">
+                <h3 className="font-medium text-[#222222]">Contact Details</h3>
+              </div>
+              <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm text-[#666666] mb-1.5">
+                  <label className="block text-sm text-[#666666] mb-2">
                     Full Name <span className="text-[#F84464]">*</span>
                   </label>
                   <input
@@ -213,173 +236,156 @@ export default function CheckoutPage() {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder="Enter your full name"
-                    className={`w-full px-4 py-2.5 bg-white border rounded-md text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.name ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
+                    className={`w-full px-4 py-3 bg-white border rounded-lg text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.name ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
                   />
                   {errors.name && <p className="mt-1 text-xs text-[#F84464]">{errors.name}</p>}
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-[#666666] mb-1.5">
-                      Email <span className="text-[#F84464]">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="your@email.com"
-                      className={`w-full px-4 py-2.5 bg-white border rounded-md text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.email ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
-                    />
-                    {errors.email && <p className="mt-1 text-xs text-[#F84464]">{errors.email}</p>}
-                  </div>
-                  <div>
-                    <label className="block text-sm text-[#666666] mb-1.5">
-                      Phone <span className="text-[#F84464]">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className={`w-full px-4 py-2.5 bg-white border rounded-md text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.phone ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
-                    />
-                    {errors.phone && <p className="mt-1 text-xs text-[#F84464]">{errors.phone}</p>}
-                  </div>
+                <div>
+                  <label className="block text-sm text-[#666666] mb-2">
+                    Email <span className="text-[#F84464]">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="your@email.com"
+                    className={`w-full px-4 py-3 bg-white border rounded-lg text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.email ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
+                  />
+                  {errors.email && <p className="mt-1 text-xs text-[#F84464]">{errors.email}</p>}
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-[#666666] mb-2">
+                    Phone <span className="text-[#F84464]">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className={`w-full px-4 py-3 bg-white border rounded-lg text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] focus:ring-2 focus:ring-[#F84464]/10 transition-all duration-200 ${errors.phone ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
+                  />
+                  {errors.phone && <p className="mt-1 text-xs text-[#F84464]">{errors.phone}</p>}
                 </div>
               </div>
-            </div>
-
-            {/* Payment Method */}
-            <div className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E5E5E5] bg-[#F5F5F5]">
-                <h2 className="font-medium text-[#222222]">Payment Method</h2>
-              </div>
-              <div className="p-4">
-                <div className="space-y-3">
-                  {paymentMethods.map(method => {
-                    const Icon = method.icon
-                    const isSelected = paymentMethod === method.id
-                    return (
-                      <div key={method.id}>
-                        <button
-                          type="button"
-                          onClick={() => setPaymentMethod(method.id)}
-                          className={`w-full flex items-center gap-4 p-3 rounded-lg border transition-all duration-200 text-left ${
-                            isSelected ? 'border-[#F84464] bg-[#F84464]/5' : 'border-[#E5E5E5] hover:border-[#D5D5D5] bg-white'
-                          }`}
-                        >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                            isSelected ? 'bg-[#F84464] text-white' : 'bg-[#F5F5F5] text-[#666666]'
-                          }`}>
-                            <Icon className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-[#222222] text-sm">{method.name}</div>
-                            <div className="text-xs text-[#999999]">{method.description}</div>
-                          </div>
-                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                            isSelected ? 'border-[#F84464]' : 'border-[#E5E5E5]'
-                          }`}>
-                            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#F84464]" />}
-                          </div>
-                        </button>
-                        
-                        {isSelected && method.id === 'upi' && (
-                          <div className="mt-3 ml-14">
-                            <input
-                              type="text"
-                              value={formData.upiId}
-                              onChange={(e) => handleInputChange('upiId', e.target.value)}
-                              placeholder="yourname@upi"
-                              className={`w-full max-w-xs px-4 py-2.5 bg-white border rounded-md text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] transition-all duration-200 ${errors.upiId ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
-                            />
-                            {errors.upiId && <p className="mt-1 text-xs text-[#F84464]">{errors.upiId}</p>}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-[#999999]">
-              <Shield className="w-4 h-4 text-green-500" />
-              <p>Your payment is secured with 256-bit encryption</p>
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#E5E5E5] bg-[#F5F5F5]">
-                <h2 className="font-medium text-[#222222]">Order Summary</h2>
+          {/* Payment Method - Full Width */}
+          <div className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#E5E5E5] bg-[#F5F5F5]">
+              <h3 className="font-medium text-[#222222]">Payment Method</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-3">
+                {paymentMethods.map(method => {
+                  const Icon = method.icon
+                  const isSelected = paymentMethod === method.id
+                  return (
+                    <div key={method.id}>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod(method.id)}
+                        className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 text-left ${
+                          isSelected ? 'border-[#F84464] bg-[#F84464]/5' : 'border-[#E5E5E5] hover:border-[#D5D5D5] bg-white'
+                        }`}
+                      >
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+                          isSelected ? 'bg-[#F84464] text-white' : 'bg-[#F5F5F5] text-[#666666]'
+                        }`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-medium text-[#222222]">{method.name}</div>
+                          <div className="text-sm text-[#999999]">{method.description}</div>
+                        </div>
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? 'border-[#F84464]' : 'border-[#E5E5E5]'
+                        }`}>
+                          {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#F84464]" />}
+                        </div>
+                      </button>
+                      
+                      {isSelected && method.id === 'upi' && (
+                        <div className="mt-3 ml-16">
+                          <input
+                            type="text"
+                            value={formData.upiId}
+                            onChange={(e) => handleInputChange('upiId', e.target.value)}
+                            placeholder="yourname@upi"
+                            className={`w-full max-w-sm px-4 py-3 bg-white border rounded-lg text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] transition-all duration-200 ${errors.upiId ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
+                          />
+                          {errors.upiId && <p className="mt-1 text-xs text-[#F84464]">{errors.upiId}</p>}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-              <div className="p-4">
-                <div className="flex items-start gap-3 mb-4 pb-4 border-b border-[#E5E5E5]">
-                  <img
-                    src={selectedMatch.image}
-                    alt="Match"
-                    className="w-16 h-16 rounded object-cover"
-                  />
-                  <div>
-                    <h3 className="font-medium text-[#222222] text-sm">
-                      {selectedMatch.team1Short} vs {selectedMatch.team2Short}
-                    </h3>
-                    <p className="text-xs text-[#666666] mt-1">{selectedSeats.length} seats</p>
-                  </div>
+            </div>
+          </div>
+
+          {/* Price Summary - Full Width */}
+          <div className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#E5E5E5] bg-[#F5F5F5]">
+              <h3 className="font-medium text-[#222222]">Price Summary</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-3 text-sm mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#666666]">Subtotal ({selectedSeats.length} seats)</span>
+                  <span className="text-[#222222]">₹{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#666666]">Convenience Fee</span>
+                  <span className="text-[#222222]">₹{convenienceFee.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#666666]">GST (18%)</span>
+                  <span className="text-[#222222]">₹{gst.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="border-t border-[#E5E5E5] pt-4">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="font-semibold text-[#222222] text-lg">Total Amount</span>
+                  <span className="font-bold text-[#F84464] text-2xl">₹{total.toLocaleString()}</span>
                 </div>
 
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666666]">Subtotal</span>
-                    <span className="text-[#222222]">₹{subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666666]">Convenience Fee</span>
-                    <span className="text-[#222222]">₹{convenienceFee.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#666666]">GST (18%)</span>
-                    <span className="text-[#222222]">₹{gst.toLocaleString()}</span>
-                  </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-[#999999] mb-6">
+                  <Shield className="w-4 h-4 text-green-500" />
+                  <p>Your payment is secured with 256-bit encryption</p>
                 </div>
 
-                <div className="border-t border-[#E5E5E5] pt-3">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-semibold text-[#222222]">Total</span>
-                    <span className="font-bold text-[#F84464] text-lg">₹{total.toLocaleString()}</span>
-                  </div>
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  className="w-full py-4 bg-[#F84464] text-white font-semibold rounded-lg hover:bg-[#E03454] transition-colors active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 text-lg"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5" />
+                      Pay ₹{total.toLocaleString()}
+                    </>
+                  )}
+                </button>
 
-                  <button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full py-3 bg-[#F84464] text-white font-medium rounded-md hover:bg-[#E03454] transition-colors active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {isProcessing ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4" />
-                        Pay ₹{total.toLocaleString()}
-                      </>
-                    )}
-                  </button>
-
-                  <p className="text-center text-xs text-[#999999] mt-3">
-                    By clicking Pay, you agree to our Terms
-                  </p>
-                </div>
+                <p className="text-center text-sm text-[#999999] mt-4">
+                  By clicking Pay, you agree to our Terms & Conditions
+                </p>
               </div>
             </div>
           </div>
         </form>
       </div>
 
-      {/* UPI App Selection Modal */}
+      {/* UPI App Selection Modal - Keep existing modal */}
       {showUpiModal && (
         <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">

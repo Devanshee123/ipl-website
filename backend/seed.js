@@ -110,7 +110,7 @@ const matches = [
     stadium: 'Wankhede Stadium',
     city: 'Mumbai',
     startingPrice: 2500,
-    image: '/images/match-mi-rcb.jpg',
+    image: '/images/match-mi-csk.jpg',
     status: 'upcoming',
     categories: [
       { name: 'Premium', price: 8000, rows: 5, seatsPerRow: 20, seats: [] },

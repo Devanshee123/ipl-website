@@ -55,6 +55,78 @@ export default function MatchesSection() {
               </div>
               
               <div className={`p-4 space-y-4 ${showFilters ? '' : 'hidden lg:block'}`}>
+                {/* Date Filter */}
+                <div>
+                  <button
+                    onClick={() => toggleFilter('date')}
+                    className="w-full flex items-center justify-between text-sm font-medium text-[#222222] mb-3"
+                  >
+                    Date
+                    <ChevronDown className={`w-4 h-4 transition-transform ${filters.date ? '' : '-rotate-90'}`} />
+                  </button>
+                  {filters.date && (
+                    <div className="space-y-2">
+                      {['Today', 'Tomorrow', 'This Weekend', 'This Month'].map(date => (
+                        <label key={date} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-[#F84464] rounded"
+                          />
+                          <span className="text-sm text-[#666666]">{date}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Category Filter */}
+                <div>
+                  <button
+                    onClick={() => toggleFilter('category')}
+                    className="w-full flex items-center justify-between text-sm font-medium text-[#222222] mb-3"
+                  >
+                    Category
+                    <ChevronDown className={`w-4 h-4 transition-transform ${filters.category ? '' : '-rotate-90'}`} />
+                  </button>
+                  {filters.category && (
+                    <div className="space-y-2">
+                      {['Platinum', 'Gold', 'Silver', 'General'].map(category => (
+                        <label key={category} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-[#F84464] rounded"
+                          />
+                          <span className="text-sm text-[#666666]">{category}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Price Filter */}
+                <div>
+                  <button
+                    onClick={() => toggleFilter('price')}
+                    className="w-full flex items-center justify-between text-sm font-medium text-[#222222] mb-3"
+                  >
+                    Price Range
+                    <ChevronDown className={`w-4 h-4 transition-transform ${filters.price ? '' : '-rotate-90'}`} />
+                  </button>
+                  {filters.price && (
+                    <div className="space-y-2">
+                      {['Under ₹2000', '₹2000 - ₹5000', '₹5000 - ₹8000', 'Above ₹8000'].map(price => (
+                        <label key={price} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-[#F84464] rounded"
+                          />
+                          <span className="text-sm text-[#666666]">{price}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Stadium Filter */}
                 <div>
                   <button
@@ -92,7 +164,7 @@ export default function MatchesSection() {
               <p className="text-[#666666]">{filteredMatches.length} events found</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {filteredMatches.map((match, index) => (
                 <div
                   key={match.id}
@@ -101,7 +173,7 @@ export default function MatchesSection() {
                   }`}
                   style={{ transitionDelay: `${index * 60}ms` }}
                 >
-                  <div className="relative h-44 overflow-hidden">
+                  <div className="relative h-40 overflow-hidden">
                     <img
                       src={match.image}
                       alt={`${match.team1} vs ${match.team2}`}
@@ -112,11 +184,11 @@ export default function MatchesSection() {
                     </div>
                   </div>
                   
-                  <div className="p-4">
-                    <h3 className="font-medium text-[#222222] mb-2 line-clamp-1">
+                  <div className="p-3">
+                    <h3 className="font-medium text-[#222222] mb-1.5 line-clamp-1">
                       {match.team1Short} vs {match.team2Short}
                     </h3>
-                    <div className="space-y-1.5 mb-4">
+                    <div className="space-y-1 mb-3">
                       <div className="flex items-center gap-2 text-sm text-[#666666]">
                         <MapPin className="w-3.5 h-3.5" />
                         {match.stadium}
@@ -133,10 +205,10 @@ export default function MatchesSection() {
                     
                     <button
                       onClick={() => handleBookClick(match)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F84464] text-white text-sm font-medium rounded-md hover:bg-[#E03454] transition-colors active:scale-[0.98] group/btn"
+                      className="w-full flex items-center justify-center gap-1 px-4 py-2 bg-[#F84464] text-white text-sm font-medium rounded-md hover:bg-[#E03454] transition-colors"
                     >
                       Book Tickets
-                      <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-0.5 transition-transform" />
+                      <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
