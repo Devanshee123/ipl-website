@@ -1,5 +1,4 @@
-import { useState, createContext, useContext } from 'react'
-import { getImageUrl } from './config'
+import { useState, createContext, useContext, useEffect } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import MatchesSection from './components/MatchesSection'
@@ -9,12 +8,16 @@ import SeatSelectionPage from './pages/SeatSelectionPage'
 import CheckoutPage from './pages/CheckoutPage'
 import ConfirmationPage from './pages/ConfirmationPage'
 import AdminPanel from './pages/AdminPanel'
+import { matchAPI } from './services/api'
 
 const AppContext = createContext()
 
 export const useAppContext = () => useContext(AppContext)
 
-const matches = [
+const cities = ['All Cities', 'Mumbai', 'Bangalore', 'Delhi', 'Mohali', 'Chennai', 'Kolkata', 'Hyderabad']
+const stadiums = ['All Stadiums', 'Wankhede Stadium', 'M Chinnaswamy Stadium', 'Arun Jaitley Stadium', 'PCA Stadium', 'Chepauk', 'Eden Gardens']
+
+const initialMatches = [
   {
     id: 1,
     team1: 'Mumbai Indians',
@@ -26,7 +29,7 @@ const matches = [
     stadium: 'Wankhede Stadium',
     city: 'Mumbai',
     startingPrice: 1500,
-    image: getImageUrl('match-mi-csk.jpg'),
+    image: 'https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800',
     categories: [
       { name: 'Platinum', price: 8000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 5000, rows: 8, seatsPerRow: 25 },
@@ -45,7 +48,7 @@ const matches = [
     stadium: 'M Chinnaswamy Stadium',
     city: 'Bangalore',
     startingPrice: 1200,
-    image: getImageUrl('match-rcb-kkr.jpg'),
+    image: 'https://images.unsplash.com/photo-1540747913341-32f8eafd4be5?w=800',
     categories: [
       { name: 'Platinum', price: 7000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 4500, rows: 8, seatsPerRow: 25 },
@@ -64,7 +67,7 @@ const matches = [
     stadium: 'Arun Jaitley Stadium',
     city: 'Delhi',
     startingPrice: 1000,
-    image: getImageUrl('match-dc-pbks.jpg'),
+    image: 'https://images.unsplash.com/photo-1562077772-3f0d5e7f0f1f?w=800',
     categories: [
       { name: 'Platinum', price: 6000, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 4000, rows: 8, seatsPerRow: 25 },
@@ -83,7 +86,7 @@ const matches = [
     stadium: 'PCA Stadium',
     city: 'Mohali',
     startingPrice: 800,
-    image: getImageUrl('match-rr-gt.jpg'),
+    image: 'https://images.unsplash.com/photo-1587280507867-0a8e0b8b8b8b?w=800',
     categories: [
       { name: 'Platinum', price: 5500, rows: 5, seatsPerRow: 20 },
       { name: 'Gold', price: 3500, rows: 8, seatsPerRow: 25 },
@@ -92,9 +95,6 @@ const matches = [
     ]
   }
 ]
-
-const cities = ['All Cities', 'Mumbai', 'Bangalore', 'Delhi', 'Mohali', 'Chennai', 'Kolkata', 'Hyderabad']
-const stadiums = ['All Stadiums', 'Wankhede Stadium', 'M Chinnaswamy Stadium', 'Arun Jaitley Stadium', 'PCA Stadium', 'Chepauk', 'Eden Gardens']
 
 function App() {
   const [currentView, setCurrentView] = useState('home')
@@ -106,6 +106,31 @@ function App() {
   const [currentBooking, setCurrentBooking] = useState(null)
   const [bookings, setBookings] = useState([])
   const [isAdmin, setIsAdmin] = useState(false)
+  const [matches, setMatches] = useState(initialMatches)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch matches from backend
+  useEffect(() => {
+    const fetchMatches = async () => {
+      console.log('🔍 Fetching matches from API...')
+      try {
+        setLoading(true)
+        const data = await matchAPI.getAll()
+        console.log('✅ API Success - Matches fetched:', data.length)
+        setMatches(data)
+        setError(null)
+      } catch (err) {
+        console.error('❌ API Failed:', err.message)
+        setError('Failed to load matches. Using local data.')
+        // Fallback to initial matches already set
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMatches()
+  }, [])
 
   const toggleSeatSelection = (seat) => {
     setSelectedSeats(prev => {
@@ -126,11 +151,12 @@ function App() {
   }
 
   const deleteMatch = (matchId) => {
-    // Implementation for admin
+    setMatches(prev => prev.filter(m => m.id !== matchId))
   }
 
   const contextValue = {
     matches,
+    setMatches,
     cities,
     stadiums,
     currentView,
@@ -151,7 +177,9 @@ function App() {
     bookings,
     isAdmin,
     setIsAdmin,
-    deleteMatch
+    deleteMatch,
+    loading,
+    error
   }
 
   const renderView = () => {
