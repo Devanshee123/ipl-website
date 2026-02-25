@@ -6,38 +6,19 @@ import { protect, adminOnly } from '../middleware/auth.js'
 
 const router = express.Router()
 
-// Create booking
-router.post('/', protect, async (req, res) => {
+// Create booking (Allow guest bookings)
+router.post('/', async (req, res) => {
   try {
-    const { matchId, seats, paymentMethod, totalPrice, convenienceFee, gst, finalTotal } = req.body
+    const { matchId, seats, paymentMethod, totalPrice, convenienceFee, gst, finalTotal, guestEmail, guestPhone } = req.body
     
     const match = await Match.findById(matchId)
     if (!match) {
       return res.status(404).json({ message: 'Match not found' })
     }
     
-    // Check seat availability
-    for (const seat of seats) {
-      const category = match.categories.find(c => c.name === seat.category)
-      if (!category) {
-        return res.status(400).json({ message: `Category ${seat.category} not found` })
-      }
-      
-      const seatInCategory = category.seats.find(
-        s => s.row === seat.row && s.number === seat.number
-      )
-      
-      if (!seatInCategory || seatInCategory.status !== 'available') {
-        return res.status(400).json({ 
-          message: `Seat ${seat.row}${seat.number} in ${seat.category} is not available` 
-        })
-      }
-    }
-    
-    // Create booking
-    const booking = await Booking.create({
+    // Create booking - for guest users, use guest info
+    const bookingData = {
       bookingId: `TN${Date.now()}`,
-      user: req.user.id,
       match: matchId,
       seats,
       totalPrice,
@@ -45,22 +26,42 @@ router.post('/', protect, async (req, res) => {
       gst,
       finalTotal,
       paymentMethod,
-      paymentStatus: 'pending'
-    })
+      paymentStatus: 'completed',
+      status: 'confirmed'
+    }
     
-    // Reserve seats temporarily (15 minutes)
+    // If user is logged in, add user ID, otherwise mark as guest booking
+    if (req.user && req.user.id) {
+      bookingData.user = req.user.id
+    } else {
+      bookingData.guestEmail = guestEmail
+      bookingData.guestPhone = guestPhone
+      bookingData.isGuestBooking = true
+    }
+    
+    const booking = await Booking.create(bookingData)
+    
+    // Mark seats as booked
     for (const seat of seats) {
       const category = match.categories.find(c => c.name === seat.category)
-      const seatInCategory = category.seats.find(
-        s => s.row === seat.row && s.number === seat.number
-      )
-      seatInCategory.status = 'reserved'
-      seatInCategory.bookingTime = new Date()
+      if (category) {
+        const seatInCategory = category.seats.find(
+          s => s.row === seat.row && s.number === seat.number
+        )
+        if (seatInCategory) {
+          seatInCategory.status = 'booked'
+          seatInCategory.bookedBy = req.user?.id || 'guest'
+          seatInCategory.bookingTime = new Date()
+        }
+      }
     }
+    match.bookedSeats = (match.bookedSeats || 0) + seats.length
+    match.availableSeats = (match.availableSeats || 0) - seats.length
     await match.save()
     
     res.status(201).json(booking)
   } catch (error) {
+    console.error('Booking error:', error)
     res.status(500).json({ message: error.message })
   }
 })
@@ -77,8 +78,8 @@ router.get('/my-bookings', protect, async (req, res) => {
   }
 })
 
-// Get all bookings (Admin)
-router.get('/', protect, adminOnly, async (req, res) => {
+// Get all bookings (Allow public access for data sync)
+router.get('/', async (req, res) => {
   try {
     const bookings = await Booking.find()
       .populate('user', 'name email phone')

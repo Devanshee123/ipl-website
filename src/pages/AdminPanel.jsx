@@ -3,8 +3,11 @@ import { useAppContext } from '../App'
 import { matchAPI } from '../services/api'
 import { 
   ArrowLeft, Calendar, DollarSign, Users, Ticket, Search, Trash2, Edit, Plus, 
-  LayoutDashboard, CreditCard, X, Upload, Image as ImageIcon, Save, MapPin, Clock
+  LayoutDashboard, CreditCard, X, Upload, Image as ImageIcon, Save, MapPin, Clock,
+  Download, User, Phone, Mail, CheckCircle
 } from 'lucide-react'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 export default function AdminPanel() {
   const { matches, setMatches, bookings, setCurrentView } = useAppContext()
@@ -338,6 +341,137 @@ export default function AdminPanel() {
     )
   }
 
+  const downloadTicket = async (booking) => {
+    // Create a temporary div for the ticket
+    const ticketDiv = document.createElement('div')
+    ticketDiv.style.width = '400px'
+    ticketDiv.style.background = 'white'
+    ticketDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
+    ticketDiv.innerHTML = `
+      <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+        <div style="background: linear-gradient(135deg, #F84464 0%, #8B5CF6 100%); color: white; padding: 24px; text-align: center;">
+          <h1 style="font-size: 20px; font-weight: bold; margin: 0;">🏟️ TICKETNEST</h1>
+          <p style="font-size: 12px; margin: 4px 0 0 0; opacity: 0.9;">Official Match Ticket</p>
+        </div>
+        
+        <div style="padding: 20px;">
+          <div style="text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px dashed #E5E5E5;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+              <span style="font-size: 16px; font-weight: bold; color: #222;">${booking.match.team1Short}</span>
+              <span style="font-size: 12px; color: #F84464; font-weight: bold;">VS</span>
+              <span style="font-size: 16px; font-weight: bold; color: #222;">${booking.match.team2Short}</span>
+            </div>
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">${booking.match.stadium}</p>
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">${new Date(booking.match.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p style="font-size: 11px; color: #666; margin: 4px 0;">${booking.match.time}</p>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Customer Name</p>
+            <p style="font-size: 13px; color: #222; font-weight: 500; margin: 0;">${booking.customerName}</p>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Contact</p>
+            <p style="font-size: 11px; color: #666; margin: 0;">${booking.customerPhone} • ${booking.customerEmail}</p>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Selected Seats (${booking.seats.length})</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              ${booking.seats.map(seat => `
+                <span style="background: #F5F5F5; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #222;">${seat.section}-R${seat.row}-S${seat.seat}</span>
+              `).join('')}
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 16px;">
+            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Payment Method</p>
+            <p style="font-size: 11px; color: #222; font-weight: 500; margin: 0;">${booking.paymentMethod}</p>
+          </div>
+          
+          <div style="background: #F8F9FA; border-radius: 8px; padding: 12px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+              <span>Subtotal (${booking.seats.length} tickets)</span>
+              <span>₹${booking.totalPrice.toLocaleString()}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+              <span>Convenience Fee</span>
+              <span>₹${booking.convenienceFee.toLocaleString()}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+              <span>GST (18%)</span>
+              <span>₹${booking.gst.toLocaleString()}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #F84464; border-top: 1px solid #E5E5E5; padding-top: 8px; margin-top: 8px;">
+              <span>Total Paid</span>
+              <span>₹${booking.finalTotal.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="height: 30px; background: repeating-linear-gradient(90deg, #222 0px, #222 2px, transparent 2px, transparent 4px); margin: 8px 30px;"></div>
+        
+        <div style="text-align: center; padding: 16px; background: #F8F9FA;">
+          <div style="width: 100px; height: 100px; background: white; border: 2px solid #E5E5E5; border-radius: 8px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 100 100" width="80" height="80">
+              <rect fill="white" width="100" height="100"/>
+              <rect fill="#222" x="10" y="10" width="25" height="25"/>
+              <rect fill="#222" x="65" y="10" width="25" height="25"/>
+              <rect fill="#222" x="10" y="65" width="25" height="25"/>
+              <rect fill="#222" x="40" y="40" width="5" height="5"/>
+              <rect fill="#222" x="50" y="40" width="5" height="5"/>
+              <rect fill="#222" x="40" y="50" width="5" height="5"/>
+              <rect fill="#222" x="50" y="50" width="5" height="5"/>
+              <rect fill="#222" x="60" y="60" width="5" height="5"/>
+              <rect fill="#222" x="70" y="60" width="5" height="5"/>
+              <rect fill="#222" x="60" y="70" width="5" height="5"/>
+              <rect fill="#222" x="70" y="70" width="5" height="5"/>
+            </svg>
+          </div>
+          <p style="font-size: 10px; color: #666; font-family: monospace; margin: 0;">${booking.id}</p>
+        </div>
+        
+        <div style="text-align: center; padding: 12px; background: white; border-top: 1px solid #E5E5E5;">
+          <p style="font-size: 9px; color: #999; margin: 0;">Thank you for booking with TicketNest!</p>
+          <p style="font-size: 9px; color: #999; margin: 4px 0 0 0;">Please arrive 1 hour before the match</p>
+        </div>
+      </div>
+    `
+    
+    // Append to body temporarily
+    ticketDiv.style.position = 'absolute'
+    ticketDiv.style.left = '-9999px'
+    document.body.appendChild(ticketDiv)
+    
+    try {
+      // Generate PDF using html2canvas and jsPDF
+      const canvas = await html2canvas(ticketDiv, {
+        scale: 2,
+        useCORS: true,
+        logging: false
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`Ticket-${booking.id}.pdf`)
+      
+      // Show success message
+      alert('Ticket downloaded successfully!')
+    } catch (error) {
+      console.error('PDF generation failed:', error)
+      alert('Failed to download ticket. Please try again.')
+    } finally {
+      // Clean up
+      document.body.removeChild(ticketDiv)
+    }
+  }
+
   const formatDate = (dateStr) => {
     return new Date(dateStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
   }
@@ -360,24 +494,65 @@ export default function AdminPanel() {
           </div>
         ))}
       </div>
+      
+      {/* Detailed Recent Bookings */}
       <div className="bg-white rounded-lg border border-[#E5E5E5]">
-        <div className="px-4 py-3 border-b border-[#E5E5E5]">
+        <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between">
           <h3 className="font-medium text-[#222222]">Recent Bookings</h3>
+          <button 
+            onClick={() => setActiveTab('bookings')}
+            className="text-sm text-[#F84464] hover:underline"
+          >
+            View All
+          </button>
         </div>
         <div className="divide-y divide-[#E5E5E5]">
           {bookings.slice(-5).reverse().map(booking => (
-            <div key={booking.id} className="px-4 py-3 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-[#222222] text-sm">{booking.id}</p>
-                <p className="text-xs text-[#666666]">{booking.match.team1Short} vs {booking.match.team2Short} • {booking.seats.length} seats</p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-[#222222] text-sm">₹{booking.finalTotal.toLocaleString()}</p>
-                <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">{booking.status}</span>
+            <div key={booking.id} className="px-4 py-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="font-medium text-[#222222]">{booking.id}</p>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">{booking.status}</span>
+                  </div>
+                  <p className="text-sm text-[#666666] mb-2">
+                    {booking.match.team1Short} vs {booking.match.team2Short} • {booking.seats.length} seats
+                  </p>
+                  {/* Customer Details */}
+                  <div className="flex items-center gap-4 text-xs text-[#999999]">
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3" />
+                      {booking.customerName}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {booking.customerPhone}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3 h-3" />
+                      {booking.customerEmail}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="font-bold text-[#222222]">₹{booking.finalTotal.toLocaleString()}</p>
+                  <p className="text-xs text-[#999999] mt-1">{booking.paymentMethod}</p>
+                  <button 
+                    onClick={() => downloadTicket(booking)}
+                    className="mt-2 text-xs flex items-center gap-1 text-[#F84464] hover:underline"
+                  >
+                    <Download className="w-3 h-3" />
+                    Ticket
+                  </button>
+                </div>
               </div>
             </div>
           ))}
-          {bookings.length === 0 && <div className="px-4 py-8 text-center text-[#999999]">No bookings yet</div>}
+          {bookings.length === 0 && (
+            <div className="px-4 py-8 text-center text-[#999999]">
+              No bookings yet
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -428,13 +603,151 @@ export default function AdminPanel() {
   )
 
   const renderBookings = () => (
-    <div className="bg-white rounded-lg border border-[#E5E5E5]">
-      <div className="px-4 py-3 border-b border-[#E5E5E5]">
-        <h3 className="font-medium text-[#222222]">All Bookings (from API coming soon)</h3>
-      </div>
-      <div className="px-4 py-8 text-center text-[#999999]">
-        Bookings API integration pending
-      </div>
+    <div className="space-y-4">
+      {bookings.length === 0 ? (
+        <div className="bg-white rounded-lg border border-[#E5E5E5] p-8 text-center text-[#999999]">
+          <Ticket className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <p>No bookings yet</p>
+        </div>
+      ) : (
+        bookings.slice().reverse().map(booking => (
+          <div key={booking.id} className="bg-white rounded-lg border border-[#E5E5E5] overflow-hidden">
+            {/* Booking Header */}
+            <div className="px-6 py-4 border-b border-[#E5E5E5] bg-gradient-to-r from-gray-50 to-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#F84464]/10 flex items-center justify-center">
+                    <Ticket className="w-5 h-5 text-[#F84464]" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-[#222222]">{booking.id}</p>
+                    <p className="text-xs text-[#999999]">
+                      {new Date(booking.bookingDate).toLocaleString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">
+                    <CheckCircle className="w-4 h-4" />
+                    {booking.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Booking Body */}
+            <div className="px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Match Details */}
+                <div>
+                  <h4 className="text-sm font-medium text-[#666666] mb-3 uppercase tracking-wide">Match Details</h4>
+                  <div className="flex items-center gap-3 mb-3">
+                    <img 
+                      src={booking.match.image} 
+                      alt="Match" 
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <div>
+                      <p className="font-bold text-[#222222]">
+                        {booking.match.team1Short} vs {booking.match.team2Short}
+                      </p>
+                      <p className="text-sm text-[#666666]">{booking.match.stadium}</p>
+                      <p className="text-sm text-[#666666]">
+                        {new Date(booking.match.date).toLocaleDateString()} • {booking.match.time}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Customer Details */}
+                <div>
+                  <h4 className="text-sm font-medium text-[#666666] mb-3 uppercase tracking-wide">Customer Details</h4>
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4 text-[#999999]" />
+                      <span className="text-[#222222] font-medium">{booking.customerName}</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-[#999999]" />
+                      <span className="text-[#666666]">{booking.customerEmail}</span>
+                    </p>
+                    <p className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-[#999999]" />
+                      <span className="text-[#666666]">{booking.customerPhone}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Seats & Payment */}
+              <div className="mt-4 pt-4 border-t border-[#E5E5E5]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Seats */}
+                  <div>
+                    <h4 className="text-sm font-medium text-[#666666] mb-3 uppercase tracking-wide">
+                      Selected Seats ({booking.seats.length})
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {booking.seats.map((seat, idx) => (
+                        <span 
+                          key={idx}
+                          className="px-3 py-1.5 bg-[#F5F5F5] rounded-lg text-sm text-[#222222] font-medium"
+                        >
+                          {seat.section}-R{seat.row}-S{seat.seat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Payment Summary */}
+                  <div>
+                    <h4 className="text-sm font-medium text-[#666666] mb-3 uppercase tracking-wide">Payment Summary</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between text-[#666666]">
+                        <span>Subtotal ({booking.seats.length} tickets)</span>
+                        <span>₹{booking.totalPrice.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[#666666]">
+                        <span>Convenience Fee</span>
+                        <span>₹{booking.convenienceFee.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[#666666]">
+                        <span>GST (18%)</span>
+                        <span>₹{booking.gst.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-[#E5E5E5]">
+                        <span className="font-bold text-[#222222]">Total Paid</span>
+                        <span className="font-bold text-[#F84464] text-lg">₹{booking.finalTotal.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-[#999999] text-xs">
+                        <span>Payment Method</span>
+                        <span>{booking.paymentMethod}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Download Button */}
+              <div className="mt-4 pt-4 border-t border-[#E5E5E5] flex justify-end">
+                <button 
+                  onClick={() => downloadTicket(booking)}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-[#F84464] text-white font-medium rounded-lg hover:bg-[#E03454] transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download Ticket
+                </button>
+              </div>
+            </div>
+          </div>
+        ))
+      )}
     </div>
   )
 

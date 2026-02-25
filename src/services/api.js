@@ -64,6 +64,7 @@ export const matchAPI = {
 export const bookingAPI = {
   create: (data) => api('/bookings', { method: 'POST', body: data }),
   getMyBookings: () => api('/bookings/my-bookings'),
+  getAll: () => api('/bookings'),
   getById: (id) => api(`/bookings/${id}`),
   confirmPayment: (id, paymentData) => api(`/bookings/${id}/pay`, { method: 'PUT', body: paymentData }),
   cancel: (id) => api(`/bookings/${id}/cancel`, { method: 'PUT' })

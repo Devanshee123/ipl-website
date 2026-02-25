@@ -8,7 +8,7 @@ import SeatSelectionPage from './pages/SeatSelectionPage'
 import CheckoutPage from './pages/CheckoutPage'
 import ConfirmationPage from './pages/ConfirmationPage'
 import AdminPanel from './pages/AdminPanel'
-import { matchAPI } from './services/api'
+import { matchAPI, bookingAPI } from './services/api'
 
 const AppContext = createContext()
 
@@ -132,6 +132,73 @@ function App() {
     fetchMatches()
   }, [])
 
+  // Fetch bookings from backend - GET ALL BOOKINGS (not just user's)
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        // First try to get all bookings from backend
+        const data = await bookingAPI.getAll()
+        console.log('✅ Bookings fetched from backend:', data.length)
+        
+        // Transform backend bookings to frontend format
+        const transformedBookings = data.map(b => ({
+          id: b.bookingId,
+          matchId: b.match?._id || b.match,
+          match: b.match,
+          seats: b.seats.map(s => ({
+            id: `${s.category}-${s.row}-${s.number}`,
+            section: s.category,
+            row: s.row,
+            seat: s.number,
+            price: s.price || 0,
+            category: s.category
+          })),
+          totalPrice: b.totalPrice,
+          convenienceFee: b.convenienceFee,
+          gst: b.gst,
+          finalTotal: b.finalTotal,
+          customerName: b.guestEmail ? b.guestEmail.split('@')[0] : (b.user?.name || 'Guest'),
+          customerEmail: b.guestEmail || b.user?.email || '',
+          customerPhone: b.guestPhone || b.user?.phone || '',
+          paymentMethod: b.paymentMethod,
+          bookingDate: b.createdAt,
+          status: b.status || 'confirmed',
+          isGuestBooking: b.isGuestBooking
+        }))
+        
+        // Merge with localStorage bookings (in case some weren't saved to backend)
+        const saved = localStorage.getItem('bookings')
+        const localBookings = saved ? JSON.parse(saved) : []
+        
+        // Create a map of existing backend booking IDs
+        const backendIds = new Set(transformedBookings.map(b => b.id))
+        
+        // Add local bookings that aren't in backend yet
+        const mergedBookings = [
+          ...transformedBookings,
+          ...localBookings.filter(lb => !backendIds.has(lb.id))
+        ]
+        
+        setBookings(mergedBookings)
+        console.log('✅ Total bookings in UI:', mergedBookings.length)
+      } catch (err) {
+        console.log('⚠️ Backend fetch failed, using localStorage:', err.message)
+        // Fallback to localStorage
+        const saved = localStorage.getItem('bookings')
+        if (saved) {
+          setBookings(JSON.parse(saved))
+        }
+      }
+    }
+    
+    fetchBookings()
+  }, [])
+
+  // Save bookings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('bookings', JSON.stringify(bookings))
+  }, [bookings])
+
   const toggleSeatSelection = (seat) => {
     setSelectedSeats(prev => {
       const exists = prev.find(s => s.id === seat.id)
@@ -170,6 +237,7 @@ function App() {
     selectedCategory,
     setSelectedCategory,
     selectedSeats,
+    setSelectedSeats,
     toggleSeatSelection,
     clearSeatSelection,
     currentBooking,

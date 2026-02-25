@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAppContext } from '../App'
+import { bookingAPI } from '../services/api'
 import { ArrowLeft, CreditCard, CheckCircle, Shield, QrCode, X, Smartphone } from 'lucide-react'
 
 const paymentMethods = [
@@ -110,7 +111,8 @@ export default function CheckoutPage() {
     completeBooking()
   }
 
-  const completeBooking = () => {
+  const completeBooking = async () => {
+    // Create local booking object first
     const booking = {
       id: `TN${Date.now()}`,
       matchId: selectedMatch.id,
@@ -128,7 +130,40 @@ export default function CheckoutPage() {
       status: 'confirmed'
     }
 
+    try {
+      // Try to save to backend (will fail if server not running)
+      const bookingData = {
+        matchId: selectedMatch._id || selectedMatch.id,
+        seats: selectedSeats.map(seat => ({
+          category: seat.section || selectedCategory?.name || 'General',
+          row: seat.row,
+          number: seat.seat,
+          price: seat.price
+        })),
+        totalPrice: subtotal,
+        convenienceFee,
+        gst,
+        finalTotal: total,
+        paymentMethod: paymentMethod === 'upi' ? `UPI (${selectedUpiApp?.name || 'Default'})` : paymentMethod,
+        guestEmail: formData.email,
+        guestPhone: formData.phone
+      }
+      
+      const savedBooking = await bookingAPI.create(bookingData)
+      booking.id = savedBooking.bookingId || booking.id
+      console.log('✅ Booking saved to backend')
+    } catch (error) {
+      console.log('⚠️ Backend save failed, using localStorage only:', error.message)
+      // Still continue - booking is already created locally
+    }
+    
+    // Always save locally
     addBooking(booking)
+    
+    // Also save to localStorage directly as backup
+    const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]')
+    localStorage.setItem('bookings', JSON.stringify([...existingBookings, booking]))
+    
     clearSeatSelection()
     setIsProcessing(false)
     setShowUpiModal(false)

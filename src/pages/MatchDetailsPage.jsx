@@ -107,13 +107,13 @@ export default function MatchDetailsPage() {
 
   const handleConfirmSeats = () => {
     if (selectedSeats.length > 0) {
-      setSelectedCategory(selectedCategoryLocal)
+      setSelectedCategory(selectedCategory)
       setSelectedSeats(selectedSeats.map(seatId => ({
         id: seatId,
         section: seatId.split('-')[0],
         row: seatId.split('-')[1],
         seat: seatId.split('-')[2],
-        price: selectedCategoryLocal.price
+        price: selectedCategory.price
       })))
       setShowStadiumModal(false)
       setCurrentView('checkout')
