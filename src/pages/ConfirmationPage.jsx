@@ -19,79 +19,175 @@ export default function ConfirmationPage() {
   }
 
   const handleDownload = async () => {
-    // Create a temporary div for the ticket
-    const ticketDiv = document.createElement('div')
-    ticketDiv.style.width = '400px'
-    ticketDiv.style.background = 'white'
-    ticketDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
-    ticketDiv.innerHTML = `
-      <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div style="background: linear-gradient(135deg, #F84464 0%, #8B5CF6 100%); color: white; padding: 24px; text-align: center;">
-          <h1 style="font-size: 20px; font-weight: bold; margin: 0;">🏟️ TICKETNEST</h1>
-          <p style="font-size: 12px; margin: 4px 0 0 0; opacity: 0.9;">Official Match Ticket</p>
+    // Create a temporary container with proper styling
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '0'
+    document.body.appendChild(container)
+    
+    // Create the ticket element with full HTML/CSS styling (like the original HTML download)
+    const ticketWrapper = document.createElement('div')
+    ticketWrapper.style.width = '400px'
+    ticketWrapper.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    ticketWrapper.style.padding = '20px'
+    ticketWrapper.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    ticketWrapper.style.minHeight = '100vh'
+    ticketWrapper.style.display = 'flex'
+    ticketWrapper.style.alignItems = 'center'
+    ticketWrapper.style.justifyContent = 'center'
+    
+    ticketWrapper.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 400px;
+        width: 100%;
+      ">
+        <!-- Header -->
+        <div style="
+          background: linear-gradient(135deg, #F84464 0%, #8B5CF6 100%);
+          color: white;
+          padding: 24px;
+          text-align: center;
+        ">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ TICKETNEST</h1>
+          <p style="font-size: 14px; margin: 0; opacity: 0.9;">Official Match Ticket</p>
         </div>
         
-        <div style="padding: 20px;">
-          <div style="text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px dashed #E5E5E5;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-              <span style="font-size: 16px; font-weight: bold; color: #222;">${currentBooking.match.team1Short}</span>
-              <span style="font-size: 12px; color: #F84464; font-weight: bold;">VS</span>
-              <span style="font-size: 16px; font-weight: bold; color: #222;">${currentBooking.match.team2Short}</span>
+        <!-- Body -->
+        <div style="padding: 24px;">
+          <!-- Match Info -->
+          <div style="
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #E5E5E5;
+          ">
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 12px;
+              margin-bottom: 12px;
+            ">
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: bold; color: #222;">${currentBooking.match.team1Short}</div>
+              </div>
+              <div style="font-size: 14px; color: #F84464; font-weight: bold;">VS</div>
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: bold; color: #222;">${currentBooking.match.team2Short}</div>
+              </div>
             </div>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${currentBooking.match.stadium}</p>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${formatDate(currentBooking.match.date)}</p>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${currentBooking.match.time}</p>
+            <div style="font-size: 13px; color: #666; line-height: 1.6;">
+              ${currentBooking.match.stadium}<br>
+              ${formatDate(currentBooking.match.date)}<br>
+              ${currentBooking.match.time}
+            </div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Customer Name</p>
-            <p style="font-size: 13px; color: #222; font-weight: 500; margin: 0;">${currentBooking.customerName}</p>
+          <!-- Customer Info -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Customer Name</div>
+            <div style="font-size: 14px; color: #222; font-weight: 500;">${currentBooking.customerName}</div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Contact</p>
-            <p style="font-size: 11px; color: #666; margin: 0;">${currentBooking.customerPhone} • ${currentBooking.customerEmail}</p>
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contact</div>
+            <div style="font-size: 13px; color: #666;">${currentBooking.customerPhone} • ${currentBooking.customerEmail}</div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Selected Seats (${currentBooking.seats.length})</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          <!-- Seats -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Selected Seats (${currentBooking.seats.length})</div>
+            <div style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+              gap: 8px;
+            ">
               ${currentBooking.seats.map(seat => `
-                <span style="background: #F5F5F5; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #222;">${seat.section || seat.category || 'Sec'}-R${seat.row}-S${seat.seat || seat.number}</span>
+                <div style="
+                  background: #F5F5F5;
+                  padding: 6px 10px;
+                  border-radius: 6px;
+                  font-size: 12px;
+                  text-align: center;
+                  color: #222;
+                ">${seat.section || seat.category || 'Sec'}-R${seat.row}-S${seat.seat || seat.number}</div>
               `).join('')}
             </div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Payment Method</p>
-            <p style="font-size: 11px; color: #222; font-weight: 500; margin: 0;">${currentBooking.paymentMethod}</p>
+          <!-- Payment Method -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Payment Method</div>
+            <div style="font-size: 14px; color: #222; font-weight: 500;">${currentBooking.paymentMethod}</div>
           </div>
           
-          <div style="background: #F8F9FA; border-radius: 8px; padding: 12px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+          <!-- Price Section -->
+          <div style="
+            background: #F8F9FA;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+          ">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>Subtotal (${currentBooking.seats.length} tickets)</span>
               <span>₹${currentBooking.totalPrice.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>Convenience Fee</span>
               <span>₹${currentBooking.convenienceFee.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>GST (18%)</span>
               <span>₹${currentBooking.gst.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #F84464; border-top: 1px solid #E5E5E5; padding-top: 8px; margin-top: 8px;">
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              font-size: 16px;
+              font-weight: bold;
+              color: #F84464;
+              border-top: 1px solid #E5E5E5;
+              padding-top: 12px;
+              margin-top: 12px;
+            ">
               <span>Total Paid</span>
               <span>₹${currentBooking.finalTotal.toLocaleString()}</span>
             </div>
           </div>
         </div>
         
-        <div style="height: 30px; background: repeating-linear-gradient(90deg, #222 0px, #222 2px, transparent 2px, transparent 4px); margin: 8px 30px;"></div>
+        <!-- Barcode -->
+        <div style="
+          height: 40px;
+          background: repeating-linear-gradient(
+            90deg,
+            #222 0px,
+            #222 2px,
+            transparent 2px,
+            transparent 4px
+          );
+          margin: 12px 40px;
+        "></div>
         
-        <div style="text-align: center; padding: 16px; background: #F8F9FA;">
-          <div style="width: 100px; height: 100px; background: white; border: 2px solid #E5E5E5; border-radius: 8px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;">
-            <svg viewBox="0 0 100 100" width="80" height="80">
+        <!-- QR Section -->
+        <div style="text-align: center; padding: 20px; background: #F8F9FA;">
+          <div style="
+            width: 150px;
+            height: 150px;
+            background: white;
+            border: 2px solid #E5E5E5;
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <svg viewBox="0 0 100 100" width="120" height="120">
               <rect fill="white" width="100" height="100"/>
               <rect fill="#222" x="10" y="10" width="25" height="25"/>
               <rect fill="#222" x="65" y="10" width="25" height="25"/>
@@ -104,38 +200,57 @@ export default function ConfirmationPage() {
               <rect fill="#222" x="70" y="60" width="5" height="5"/>
               <rect fill="#222" x="60" y="70" width="5" height="5"/>
               <rect fill="#222" x="70" y="70" width="5" height="5"/>
+              <rect fill="#222" x="40" y="20" width="5" height="5"/>
+              <rect fill="#222" x="50" y="20" width="5" height="5"/>
+              <rect fill="#222" x="40" y="30" width="5" height="5"/>
+              <rect fill="#222" x="50" y="30" width="5" height="5"/>
+              <rect fill="#222" x="20" y="40" width="5" height="5"/>
+              <rect fill="#222" x="30" y="40" width="5" height="5"/>
+              <rect fill="#222" x="20" y="50" width="5" height="5"/>
+              <rect fill="#222" x="30" y="50" width="5" height="5"/>
             </svg>
           </div>
-          <p style="font-size: 10px; color: #666; font-family: monospace; margin: 0;">${currentBooking.id}</p>
+          <div style="font-size: 12px; color: #666; font-family: monospace;">${currentBooking.id}</div>
         </div>
         
-        <div style="text-align: center; padding: 12px; background: white; border-top: 1px solid #E5E5E5;">
-          <p style="font-size: 9px; color: #999; margin: 0;">Thank you for booking with TicketNest!</p>
-          <p style="font-size: 9px; color: #999; margin: 4px 0 0 0;">Please arrive 1 hour before the match</p>
+        <!-- Footer -->
+        <div style="text-align: center; padding: 16px; font-size: 11px; color: #999; border-top: 1px solid #E5E5E5;">
+          <p style="margin: 0;">Thank you for booking with TicketNest!</p>
+          <p style="margin: 4px 0 0 0;">Please arrive 1 hour before the match • Carry valid ID proof</p>
         </div>
       </div>
     `
     
-    // Append to body temporarily
-    ticketDiv.style.position = 'absolute'
-    ticketDiv.style.left = '-9999px'
-    document.body.appendChild(ticketDiv)
+    container.appendChild(ticketWrapper)
     
     try {
-      // Generate PDF using html2canvas and jsPDF
-      const canvas = await html2canvas(ticketDiv, {
-        scale: 2,
+      // Wait for fonts to load
+      await document.fonts.ready
+      
+      // Generate high-quality canvas
+      const canvas = await html2canvas(ticketWrapper, {
+        scale: 3,
         useCORS: true,
-        logging: false
+        logging: false,
+        backgroundColor: null,
+        windowWidth: 440,
+        windowHeight: ticketWrapper.scrollHeight
       })
       
-      const imgData = canvas.toDataURL('image/png')
+      // Create PDF with proper dimensions
+      const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF('p', 'mm', 'a4')
       
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = pageWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      // Center the ticket on the page
+      const xOffset = 0
+      const yOffset = imgHeight > pageHeight ? 0 : (pageHeight - imgHeight) / 2
+      
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, Math.min(imgHeight, pageHeight))
       pdf.save(`Ticket-${currentBooking.id}.pdf`)
       
       alert('Ticket downloaded successfully!')
@@ -143,8 +258,7 @@ export default function ConfirmationPage() {
       console.error('PDF generation failed:', error)
       alert('Failed to download ticket. Please try again.')
     } finally {
-      // Clean up
-      document.body.removeChild(ticketDiv)
+      document.body.removeChild(container)
     }
   }
 

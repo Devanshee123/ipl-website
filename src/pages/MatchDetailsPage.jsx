@@ -19,6 +19,32 @@ export default function MatchDetailsPage() {
     return null
   }
 
+  // Debug logging
+  console.log('📋 Selected Match:', selectedMatch)
+  console.log('📋 Categories:', selectedMatch.categories)
+
+  // Ensure all 5 categories exist with proper defaults
+  const ensureCategories = (cats) => {
+    const defaultCategories = [
+      { name: 'VIP', price: 10000, rows: 4, seatsPerRow: 15, color: '#8B5CF6' },
+      { name: 'Premium', price: 7500, rows: 5, seatsPerRow: 20, color: '#F59E0B' },
+      { name: 'Gold', price: 5000, rows: 8, seatsPerRow: 25, color: '#EAB308' },
+      { name: 'Silver', price: 3500, rows: 10, seatsPerRow: 30, color: '#9CA3AF' },
+      { name: 'General', price: 1500, rows: 15, seatsPerRow: 40, color: '#22C55E' }
+    ]
+    
+    if (!cats || cats.length === 0) return defaultCategories
+    
+    // Merge existing categories with defaults
+    return defaultCategories.map(defaultCat => {
+      const existing = cats.find(c => c.name === defaultCat.name)
+      return existing ? { ...defaultCat, ...existing } : defaultCat
+    })
+  }
+
+  const categories = ensureCategories(selectedMatch.categories)
+  console.log('📋 Ensured Categories:', categories)
+
   const handleCategorySelect = (category) => {
     setSelectedCategoryLocal(category)
     setSeatCount(2)
@@ -213,75 +239,62 @@ export default function MatchDetailsPage() {
               </div>
             </div>
 
-            {/* Categories */}
+            {/* Categories - Dynamic from match data */}
             <h2 className="text-xl font-bold text-[#222222] mb-4">Select Category</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* VIP Card */}
-              <button
-                onClick={() => handleCategorySelect(selectedMatch.categories.find(c => c.name === 'VIP') || selectedMatch.categories[0])}
-                className="group relative overflow-hidden rounded-lg hover:shadow-lg transition-all duration-300 text-left"
-              >
-                <div className="relative h-48 bg-gradient-to-b from-[#F84464]/70 to-white">
-                  <div className="absolute top-4 left-4">
-                    <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1">
-                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      <span className="text-gray-800 text-sm font-medium">VIP</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-800 text-lg">VIP Experience</h3>
-                      <span className="px-2 py-1 bg-white/80 backdrop-blur-sm rounded text-sm font-bold text-gray-800">
-                        ₹{selectedMatch.categories.find(c => c.name === 'VIP')?.price?.toLocaleString() || selectedMatch.categories[0]?.price?.toLocaleString() || '10000'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Ultimate luxury with personalized service
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
-                        Limited seats available
-                      </span>
-                      <span className="text-sm text-[#F84464] font-medium flex items-center gap-1">
-                        Select VIP
-                        <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-
-              {/* Regular Category Cards */}
-              {selectedMatch.categories.map(category => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {categories.map((category) => (
                 <button
                   key={category.name}
                   onClick={() => handleCategorySelect(category)}
-                  className="group relative overflow-hidden rounded-lg hover:shadow-lg transition-all duration-300 text-left"
+                  className="group relative overflow-hidden rounded-lg hover:shadow-lg transition-all duration-300 text-left border border-gray-200"
                 >
-                  <div className="relative h-48 bg-gradient-to-b from-[#F84464]/70 to-white">
+                  <div 
+                    className="relative h-40 p-4"
+                    style={{ 
+                      background: category.name === 'VIP' 
+                        ? 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
+                        : category.name === 'Premium'
+                        ? 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)'
+                        : category.name === 'Gold'
+                        ? 'linear-gradient(135deg, #EAB308 0%, #FDE047 100%)'
+                        : category.name === 'Silver'
+                        ? 'linear-gradient(135deg, #9CA3AF 0%, #D1D5DB 100%)'
+                        : 'linear-gradient(135deg, #22C55E 0%, #86EFAC 100%)'
+                    }}
+                  >
                     <div className="absolute top-4 left-4">
-                      <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1">
+                      <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
+                        <span 
+                          className="w-2 h-2 rounded-full"
+                          style={{
+                            backgroundColor: category.color || (
+                              category.name === 'VIP' ? '#8B5CF6' :
+                              category.name === 'Premium' ? '#F59E0B' :
+                              category.name === 'Gold' ? '#EAB308' :
+                              category.name === 'Silver' ? '#9CA3AF' :
+                              '#22C55E'
+                            )
+                          }}
+                        />
                         <span className="text-gray-800 text-sm font-medium">{category.name}</span>
                       </div>
                     </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-sm">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-gray-800 text-lg">{category.name}</h3>
-                        <span className="px-2 py-1 bg-white/80 backdrop-blur-sm rounded text-sm font-bold text-gray-800">
-                          ₹{category.price.toLocaleString()}
+                        <span className="px-2 py-1 bg-gray-800 text-white rounded text-sm font-bold">
+                          ₹{category.price?.toLocaleString() || '0'}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {category.rows} rows × {category.seatsPerRow} seats per row
+                      <p className="text-sm text-gray-600 mb-2">
+                        {category.rows || 0} rows × {category.seatsPerRow || 0} seats per row
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-gray-500">
-                          {category.rows * category.seatsPerRow} seats available
+                          {(category.rows || 0) * (category.seatsPerRow || 0)} total seats
                         </span>
                         <span className="text-sm text-[#F84464] font-medium flex items-center gap-1">
-                          Select {category.name}
+                          Select
                           <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </span>
                       </div>
@@ -414,163 +427,56 @@ export default function MatchDetailsPage() {
                 <p className="text-xs text-gray-400 mt-2">Please select the category of your choice. It will get highlighted on the layout.</p>
               </div>
 
-              {/* Price Categories - Expandable */}
+              {/* Price Categories - Dynamic from match data */}
               <div className="flex-1 overflow-y-auto">
-                {/* Sold Out - Grey */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(200)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-gray-400" />
-                      <span className="text-sm font-medium text-gray-700">₹200</span>
+                {categories.map((category) => {
+                  const catColor = category.color || (
+                    category.name === 'VIP' ? '#8B5CF6' :
+                    category.name === 'Premium' ? '#F59E0B' :
+                    category.name === 'Gold' ? '#EAB308' :
+                    category.name === 'Silver' ? '#9CA3AF' :
+                    '#22C55E'
+                  )
+                  const bgColor = category.name === 'VIP' ? 'bg-purple-50' :
+                    category.name === 'Premium' ? 'bg-amber-50' :
+                    category.name === 'Gold' ? 'bg-yellow-50' :
+                    category.name === 'Silver' ? 'bg-gray-50' :
+                    'bg-green-50'
+                  const hoverBg = category.name === 'VIP' ? 'hover:bg-purple-100' :
+                    category.name === 'Premium' ? 'hover:bg-amber-100' :
+                    category.name === 'Gold' ? 'hover:bg-yellow-100' :
+                    category.name === 'Silver' ? 'hover:bg-gray-100' :
+                    'hover:bg-green-100'
+                  
+                  return (
+                    <div key={category.name} className="border-b border-gray-100">
+                      <button 
+                        onClick={() => toggleCategory(category.price)}
+                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 ${bgColor}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: catColor }} />
+                          <span className="text-sm font-medium text-gray-700">₹{category.price?.toLocaleString()}</span>
+                          <span className="text-xs text-gray-500">({category.name})</span>
+                        </div>
+                        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === category.price ? 'rotate-90' : ''}`} />
+                      </button>
+                      {expandedCategory === category.price && (
+                        <div className={bgColor}>
+                          {Array.from({ length: Math.min(10, category.rows || 5) }).map((_, i) => (
+                            <button 
+                              key={i} 
+                              onClick={() => handleBlockSelect(`${category.name} Block ${String.fromCharCode(65 + i)}`, category.price)}
+                              className={`w-full text-left px-3 py-2 text-xs text-gray-600 ${hoverBg} border-t border-gray-100`}
+                            >
+                              {category.name} Block {String.fromCharCode(65 + i)} (₹{category.price?.toLocaleString()}.00)
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 200 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 200 && (
-                    <div className="bg-gray-50">
-                      {['BLOCK J BAY 1-UPPER', 'BLOCK J BAY 2-UPPER', 'BLOCK J BAY 3-UPPER', 'BLOCK J BAY 4-UPPER', 'BLOCK J BAY 5-UPPER', 'BLOCK K BAY 1-UPPER', 'BLOCK K BAY 2-UPPER', 'BLOCK K BAY 3-UPPER', 'BLOCK K BAY 4-UPPER', 'BLOCK K BAY 5-UPPER', 'BLOCK K BAY 6-UPPER', 'BLOCK K BAY 7-UPPER', 'BLOCK K BAY 8-UPPER'].map((block, i) => (
-                        <div key={i} className="px-3 py-2 text-xs text-gray-400 border-t border-gray-100">{block} (₹200.00)</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Silver - Teal */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(400)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 bg-[#E0F7FA]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-[#00BCD4]" />
-                      <span className="text-sm font-medium text-gray-700">₹400</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 400 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 400 && (
-                    <div className="bg-[#E0F7FA]">
-                      {['BLOCK A BAY 1-LOWER', 'BLOCK A BAY 2-LOWER', 'BLOCK A BAY 3-LOWER', 'BLOCK A BAY 4-LOWER', 'BLOCK B BAY 1-LOWER', 'BLOCK B BAY 2-LOWER', 'BLOCK B BAY 3-LOWER', 'BLOCK B BAY 4-LOWER', 'BLOCK B BAY 5-LOWER', 'BLOCK C BAY 1-LOWER', 'BLOCK C BAY 2-LOWER', 'BLOCK C BAY 3-LOWER', 'BLOCK C BAY 4-LOWER'].map((block, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleBlockSelect(block, 400)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-[#B2EBF2] border-t border-cyan-100"
-                        >
-                          {block} (₹400.00)
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* General - Pink */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(1000)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 bg-pink-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-[#EC4899]" />
-                      <span className="text-sm font-medium text-gray-700">₹1000</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 1000 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 1000 && (
-                    <div className="bg-pink-50">
-                      {['SOUTH PREM EAST BAY 1', 'SOUTH PREM EAST BAY 2', 'SOUTH PREM EAST BAY 3', 'SOUTH PREM EAST BAY 4', 'SOUTH PREM CENTER BAY 1', 'SOUTH PREM CENTER BAY 2', 'SOUTH PREM CENTER BAY 3'].map((block, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleBlockSelect(block, 1000)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-pink-100 border-t border-pink-100"
-                        >
-                          {block} (₹1000.00)
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Gold - Sky Blue */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(6000)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 bg-blue-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-[#0EA5E9]" />
-                      <span className="text-sm font-medium text-gray-700">₹6000</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 6000 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 6000 && (
-                    <div className="bg-blue-50">
-                      {['PRESIDENT GALLERY L3 BAY2', 'PRESIDENT GALLERY L3 BAY3', 'PRES GALLERY PREM L3 BAY1', 'PRES GALLERY PREM L3 BAY2', 'PRES GALLERY PREM L3 BAY3', 'PRESGALLERY PREM L3 BAY6', 'PRESGALLERY PREM L3 BAY7', 'PRESGALLERY PREM L3 BAY8'].map((block, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleBlockSelect(block, 6000)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-blue-100 border-t border-blue-100"
-                        >
-                          {block} (₹6000.00)
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Premium - Yellow */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(10000)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 bg-yellow-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-[#F59E0B]" />
-                      <span className="text-sm font-medium text-gray-700">₹10000</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 10000 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 10000 && (
-                    <div className="bg-yellow-50">
-                      {['Premium Suite 401', 'Premium Suite 402', 'Premium Suite 403', 'Premium Suite 404', 'Premium Suite 405', 'Premium Suite 406', 'Premium Suite 407', 'Premium Suite 408', 'Premium Suite 409', 'Premium Suite 410'].map((block, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleBlockSelect(block, 10000)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-yellow-100 border-t border-yellow-100"
-                        >
-                          {block} (₹10000.00)
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* VIP - Purple */}
-                <div className="border-b border-gray-100">
-                  <button 
-                    onClick={() => toggleCategory(15000)}
-                    className="w-full flex items-center justify-between p-3 hover:bg-gray-50 bg-purple-50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-sm bg-[#8B5CF6]" />
-                      <span className="text-sm font-medium text-gray-700">₹15000</span>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === 15000 ? 'rotate-90' : ''}`} />
-                  </button>
-                  {expandedCategory === 15000 && (
-                    <div className="bg-purple-50">
-                      {['Presidential Suite 301', 'Presidential Suite 302', 'Presidential Suite 303', 'Presidential Suite 304', 'Presidential Suite 305', 'Presidential Suite 306', 'Presidential Suite 307', 'Presidential Suite 308', 'Presidential Suite 309', 'Presidential Suite 310'].map((block, i) => (
-                        <button 
-                          key={i} 
-                          onClick={() => handleBlockSelect(block, 15000)}
-                          className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-purple-100 border-t border-purple-100"
-                        >
-                          {block} (₹15000.00)
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                  )
+                })}
               </div>
             </div>
 
@@ -651,192 +557,130 @@ export default function MatchDetailsPage() {
                   {/* Cricket pitch */}
                   <rect x="460" y="495" width="80" height="10" fill="white" fillOpacity="0.4" rx="2" />
 
-                  {/* Stadium Wedge Sections */}
-                  {/* Helper function to create wedge path */}
+                  {/* Stadium Layout - Cricket Ground with Pitch Only */}
                   {(() => {
-                    const createWedgePath = (innerR, outerR, startAngle, endAngle) => {
-                      const toRad = (deg) => (deg * Math.PI) / 180
-                      const x1 = 500 + innerR * Math.cos(toRad(startAngle))
-                      const y1 = 500 + innerR * Math.sin(toRad(startAngle))
-                      const x2 = 500 + outerR * Math.cos(toRad(startAngle))
-                      const y2 = 500 + outerR * Math.sin(toRad(startAngle))
-                      const x3 = 500 + outerR * Math.cos(toRad(endAngle))
-                      const y3 = 500 + outerR * Math.sin(toRad(endAngle))
-                      const x4 = 500 + innerR * Math.cos(toRad(endAngle))
-                      const y4 = 500 + innerR * Math.sin(toRad(endAngle))
-                      
-                      const largeArc = endAngle - startAngle > 180 ? 1 : 0
-                      
-                      return `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x1} ${y1} Z`
-                    }
-                    
-                    // Outer ring sections (Pink - General) and Grey sold - based on reference image
-                    const outerSections = [
-                      // Left side
-                      { id: 'L', color: '#C0C0C0', start: 158, end: 138, rows: 9, sold: true }, // Grey
-                      { id: 'L2', color: '#EC4899', start: 136, end: 116, rows: 9 }, // Pink
-                      { id: 'M', color: '#EC4899', start: 114, end: 94, rows: 9 },
-                      { id: 'N', color: '#EC4899', start: 92, end: 72, rows: 9 },
-                      // Top grey
-                      { id: 'SOLD1', color: '#C0C0C0', start: 70, end: 50, rows: 9, sold: true },
-                      // Right side
-                      { id: 'P', color: '#EC4899', start: 48, end: 28, rows: 9 },
-                      { id: 'Q', color: '#EC4899', start: 26, end: 6, rows: 9 },
-                      { id: 'R', color: '#EC4899', start: 4, end: -16, rows: 9 },
-                      // Bottom grey
-                      { id: 'SOLD2', color: '#C0C0C0', start: -18, end: -38, rows: 9, sold: true },
-                      // Continue
-                      { id: 'K', color: '#EC4899', start: -158, end: -138, rows: 9 },
-                      { id: 'J', color: '#EC4899', start: -136, end: -116, rows: 9 },
-                      { id: 'SOLD3', color: '#C0C0C0', start: -114, end: -94, rows: 9, sold: true },
-                    ]
-                    
-                    // Middle ring sections (Teal - Silver)
-                    const middleSections = [
-                      { id: 'C', color: '#00BCD4', start: 158, end: 138, rows: 9 },
-                      { id: 'D', color: '#00BCD4', start: 136, end: 116, rows: 9 },
-                      { id: 'E', color: '#00BCD4', start: 114, end: 94, rows: 9 },
-                      { id: 'F', color: '#00BCD4', start: 92, end: 72, rows: 9 },
-                      { id: 'G', color: '#00BCD4', start: 70, end: 50, rows: 9 },
-                      { id: 'H', color: '#00BCD4', start: 48, end: 28, rows: 9 },
-                      { id: 'B', color: '#00BCD4', start: -158, end: -138, rows: 9 },
-                      { id: 'A', color: '#00BCD4', start: -136, end: -116, rows: 9 },
-                    ]
-                    
-                    // Inner ring sections (Sky Blue - Gold)
-                    const innerSections = [
-                      { id: 'A2', color: '#0EA5E9', start: -158, end: -138, rows: 9 },
-                      { id: 'B2', color: '#0EA5E9', start: -136, end: -116, rows: 9 },
-                    ]
-                    
-                    // Render all sections
-                    const allSections = [
-                      ...outerSections.map(s => ({ ...s, innerR: 355, outerR: 425 })),
-                      ...middleSections.map(s => ({ ...s, innerR: 220, outerR: 295 })),
-                      ...innerSections.map(s => ({ ...s, innerR: 165, outerR: 218 })),
-                    ]
-                    
-                    return allSections.map((section) => {
-                      const path = createWedgePath(section.innerR, section.outerR, section.start, section.end)
-                      const midAngle = (section.start + section.end) / 2
-                      const midR = (section.innerR + section.outerR) / 2
-                      const labelX = 500 + midR * Math.cos((midAngle * Math.PI) / 180)
-                      const labelY = 500 + midR * Math.sin((midAngle * Math.PI) / 180)
-                      
-                      return (
-                        <g key={section.id}>
-                          {/* Wedge shape */}
-                          <path
-                            d={path}
-                            fill={selectedSeats.some(s => s.startsWith(section.id)) ? '#F84464' : section.color}
-                            stroke="white"
-                            strokeWidth="2"
-                            className={section.sold ? '' : 'cursor-pointer hover:opacity-90'}
-                            style={{ transition: 'all 0.2s' }}
-                            onClick={() => !section.sold && handleStadiumSectionClick(section)}
-                          />
-                          {/* Section label */}
-                          <text
-                            x={labelX}
-                            y={labelY}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
-                            fill={section.sold ? '#666666' : 'white'}
-                            fontSize="20"
-                            fontWeight="bold"
-                            className="pointer-events-none select-none"
-                          >
-                            {section.id.replace(/\d/g, '').replace('SOLD', '')}
-                          </text>
-                          {/* Row numbers inside wedge */}
-                          {!section.sold && section.rows > 0 && (
-                            <g className="pointer-events-none">
-                              {Array.from({ length: Math.min(9, section.rows) }).map((_, i) => {
-                                const rowR = section.innerR + (section.outerR - section.innerR) * ((i + 1) / (section.rows + 1))
-                                const rowX = 500 + rowR * Math.cos((midAngle * Math.PI) / 180)
-                                const rowY = 500 + rowR * Math.sin((midAngle * Math.PI) / 180)
-                                // Offset based on angle for better readability
-                                const offsetX = midAngle > 90 || midAngle < -90 ? -12 : 12
-                                return (
-                                  <text
-                                    key={i}
-                                    x={rowX + offsetX}
-                                    y={rowY}
-                                    textAnchor={offsetX < 0 ? "end" : "start"}
-                                    dominantBaseline="middle"
-                                    fill="white"
-                                    fontSize="11"
-                                    fontWeight="500"
-                                    className="select-none"
-                                  >
-                                    {i + 1}
-                                  </text>
-                                )
-                              })}
-                            </g>
-                          )}
-                        </g>
-                      )
-                    })
+                    return (
+                      <>
+                        {/* Green Cricket Field */}
+                        <circle cx="500" cy="500" r="115" fill="#228B22" stroke="white" strokeWidth="4" />
+                        
+                        {/* Cricket Pitch - VERTICAL */}
+                        <rect x="495" y="460" width="10" height="80" fill="white" rx="1" />
+                        
+                        {/* Pitch markings */}
+                        <line x1="500" y1="460" x2="500" y2="540" stroke="#ccc" strokeWidth="0.5" />
+                        
+                        {/* First Ring - Close to ground */}
+                        {(() => {
+                          const firstRingSections = []
+                          const sectionCount = 16
+                          const innerR = 120
+                          const outerR = 160
+                          const anglePerSection = 360 / sectionCount
+                          
+                          for (let i = 0; i < sectionCount; i++) {
+                            const startAngle = -180 + (i * anglePerSection) + 2
+                            const endAngle = startAngle + anglePerSection - 4
+                            const sectionId = `A${i + 1}`
+                            
+                            // Create wedge path
+                            const toRad = (deg) => (deg * Math.PI) / 180
+                            const x1 = 500 + innerR * Math.cos(toRad(startAngle))
+                            const y1 = 500 + innerR * Math.sin(toRad(startAngle))
+                            const x2 = 500 + outerR * Math.cos(toRad(startAngle))
+                            const y2 = 500 + outerR * Math.sin(toRad(startAngle))
+                            const x3 = 500 + outerR * Math.cos(toRad(endAngle))
+                            const y3 = 500 + outerR * Math.sin(toRad(endAngle))
+                            const x4 = 500 + innerR * Math.cos(toRad(endAngle))
+                            const y4 = 500 + innerR * Math.sin(toRad(endAngle))
+                            const path = `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 0 0 ${x1} ${y1} Z`
+                            
+                            // Calculate label position - between seats and ground
+                            const labelR = innerR - 6  // Between ground and first row of seats
+                            const labelX = 500 + labelR * Math.cos(toRad((startAngle + endAngle) / 2))
+                            const labelY = 500 + labelR * Math.sin(toRad((startAngle + endAngle) / 2))
+                            
+                            firstRingSections.push(
+                              <g key={sectionId}>
+                                {/* Section wedge */}
+                                <path
+                                  d={path}
+                                  fill="#C0C0C0"
+                                  stroke="white"
+                                  strokeWidth="2"
+                                />
+                                
+                                {/* Row lines and seats */}
+                                {Array.from({ length: 4 }).map((_, rowIdx) => {
+                                  const rowR = innerR + (outerR - innerR) * ((rowIdx + 1) / 5)
+                                  const arcAngle = Math.abs(endAngle - startAngle)
+                                  const arcLength = (arcAngle * Math.PI / 180) * rowR
+                                  const seatSize = 8
+                                  const maxSeats = Math.max(2, Math.min(6, Math.floor((arcLength - 10) / (seatSize + 2))))
+                                  
+                                  const rowElements = []
+                                  
+                                  // Row arc line
+                                  const lx = 500 + rowR * Math.cos(toRad(startAngle))
+                                  const ly = 500 + rowR * Math.sin(toRad(startAngle))
+                                  const rx = 500 + rowR * Math.cos(toRad(endAngle))
+                                  const ry = 500 + rowR * Math.sin(toRad(endAngle))
+                                  const arcPath = `M ${lx} ${ly} A ${rowR} ${rowR} 0 0 1 ${rx} ${ry}`
+                                  rowElements.push(<path key={`row-${rowIdx}`} d={arcPath} fill="none" stroke="white" strokeWidth="1" />)
+                                  
+                                  // Seats in this row
+                                  for (let seatIdx = 0; seatIdx < maxSeats; seatIdx++) {
+                                    const seatAngle = startAngle + (arcAngle * (seatIdx + 1)) / (maxSeats + 1)
+                                    const seatX = 500 + rowR * Math.cos(toRad(seatAngle))
+                                    const seatY = 500 + rowR * Math.sin(toRad(seatAngle))
+                                    const seatId = `${sectionId}-R${rowIdx + 1}-${seatIdx + 1}`
+                                    const isSelected = selectedSeats.includes(seatId)
+                                    
+                                    rowElements.push(
+                                      <rect
+                                        key={seatId}
+                                        x={seatX - seatSize/2}
+                                        y={seatY - seatSize/2}
+                                        width={seatSize}
+                                        height={seatSize}
+                                        fill={isSelected ? '#F84464' : 'white'}
+                                        stroke={isSelected ? '#F84464' : '#9CA3AF'}
+                                        strokeWidth="0.5"
+                                        rx="1"
+                                        className="cursor-pointer"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleStadiumSeatSelect(seatId)
+                                        }}
+                                      />
+                                    )
+                                  }
+                                  
+                                  return <g key={`row-group-${rowIdx}`}>{rowElements}</g>
+                                })}
+                                
+                                {/* Section label - BLACK text between ground and seats */}
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  fill="black"
+                                  fontSize="8"
+                                  fontWeight="bold"
+                                  className="pointer-events-none select-none"
+                                >
+                                  {sectionId}
+                                </text>
+                              </g>
+                            )
+                          }
+                          
+                          return firstRingSections
+                        })()}
+                      </>
+                    )
                   })()}
-
-                  {/* Center Pavilion */}
-                  <rect x="495" y="480" width="10" height="40" fill="white" stroke="#D1D5DB" strokeWidth="1" />
-
-                  {/* Premium/VIP Boxes - South (Yellow) */}
-                  <g>
-                    <path
-                      d="M 460 580 L 540 580 L 530 610 L 470 610 Z"
-                      fill={selectedSeats.some(s => s.startsWith('SOUTH')) ? '#F84464' : '#F59E0B'}
-                      stroke="white"
-                      strokeWidth="2"
-                      className="cursor-pointer hover:opacity-90"
-                      onClick={() => handleStadiumSectionClick({ id: 'SOUTH', color: '#F59E0B', type: 'Premium', rows: 4 })}
-                    />
-                    <text x="500" y="595" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" className="pointer-events-none select-none">SOUTH</text>
-                    <text x="500" y="605" textAnchor="middle" fill="white" fontSize="9" className="pointer-events-none select-none">PREMIUM</text>
-                  </g>
-
-                  {/* VIP Boxes - West (Purple) */}
-                  <g>
-                    <path
-                      d="M 380 480 L 390 480 L 390 520 L 380 520 Z"
-                      fill={selectedSeats.some(s => s.startsWith('WEST')) ? '#F84464' : '#8B5CF6'}
-                      stroke="white"
-                      strokeWidth="2"
-                      className="cursor-pointer hover:opacity-90"
-                      onClick={() => handleStadiumSectionClick({ id: 'WEST', color: '#8B5CF6', type: 'VIP', rows: 4 })}
-                    />
-                    <text x="385" y="505" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" className="pointer-events-none select-none" transform="rotate(-90, 385, 505)">WEST</text>
-                  </g>
-
-                  {/* VIP Boxes - East (Purple) */}
-                  <g>
-                    <path
-                      d="M 610 480 L 620 480 L 620 520 L 610 520 Z"
-                      fill={selectedSeats.some(s => s.startsWith('EAST')) ? '#F84464' : '#8B5CF6'}
-                      stroke="white"
-                      strokeWidth="2"
-                      className="cursor-pointer hover:opacity-90"
-                      onClick={() => handleStadiumSectionClick({ id: 'EAST', color: '#8B5CF6', type: 'VIP', rows: 4 })}
-                    />
-                    <text x="615" y="505" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" className="pointer-events-none select-none" transform="rotate(90, 615, 505)">EAST</text>
-                  </g>
-
-                  {/* North Core Box (Grey/Sold) */}
-                  <g>
-                    <rect x="480" y="410" width="40" height="30" fill="#9CA3AF" stroke="white" strokeWidth="2" />
-                    <text x="500" y="430" textAnchor="middle" fill="white" fontSize="8" className="pointer-events-none select-none">NORTH CORE</text>
-                  </g>
-
-                  {/* Section Labels around the rings */}
-                  <text x="500" y="445" textAnchor="middle" fill="#6B7280" fontSize="11" fontWeight="500">NORTH CORE BOX</text>
-                  <text x="500" y="590" textAnchor="middle" fill="#6B7280" fontSize="11" fontWeight="500">SOUTH PREMIUM</text>
-                  
-                  {/* Outer ring labels */}
-                  <text x="500" y="275" textAnchor="middle" fill="#9CA3AF" fontSize="11">PRESIDENT GALLERY LEVEL 3</text>
-                  <text x="500" y="235" textAnchor="middle" fill="#9CA3AF" fontSize="11">PRESIDENTIAL SUITES LEVEL 4</text>
-                  <text x="500" y="195" textAnchor="middle" fill="#9CA3AF" fontSize="11">PREMIUM SUITES LEVEL 5</text>
                 </svg>
               </div>
             </div>

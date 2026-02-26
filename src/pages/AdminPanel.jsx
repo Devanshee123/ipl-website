@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAppContext } from '../App'
-import { matchAPI } from '../services/api'
+import { matchAPI, settingsAPI } from '../services/api'
 import { 
   ArrowLeft, Calendar, DollarSign, Users, Ticket, Search, Trash2, Edit, Plus, 
   LayoutDashboard, CreditCard, X, Upload, Image as ImageIcon, Save, MapPin, Clock,
@@ -31,9 +31,12 @@ export default function AdminPanel() {
     city: '',
     startingPrice: '',
     image: '',
-    platinumPrice: '',
-    platinumRows: '',
-    platinumSeatsPerRow: '',
+    vipPrice: '',
+    vipRows: '',
+    vipSeatsPerRow: '',
+    premiumPrice: '',
+    premiumRows: '',
+    premiumSeatsPerRow: '',
     goldPrice: '',
     goldRows: '',
     goldSeatsPerRow: '',
@@ -44,6 +47,30 @@ export default function AdminPanel() {
     generalRows: '',
     generalSeatsPerRow: ''
   })
+
+  // Payment Settings State
+  const [paymentSettings, setPaymentSettings] = useState({
+    upiId: 'ticketnest@upi',
+    upiName: 'TicketNest Payments'
+  })
+  const [paymentSettingsLoading, setPaymentSettingsLoading] = useState(false)
+  const [paymentSettingsError, setPaymentSettingsError] = useState(null)
+
+  // Fetch payment settings on mount
+  useEffect(() => {
+    const fetchPaymentSettings = async () => {
+      try {
+        const settings = await settingsAPI.getPaymentSettings()
+        setPaymentSettings({
+          upiId: settings.upiId,
+          upiName: settings.upiName
+        })
+      } catch (err) {
+        console.error('Failed to fetch payment settings:', err)
+      }
+    }
+    fetchPaymentSettings()
+  }, [])
 
   const totalRevenue = bookings.reduce((sum, b) => sum + b.finalTotal, 0)
   const totalTickets = bookings.reduce((sum, b) => sum + b.seats.length, 0)
@@ -58,6 +85,8 @@ export default function AdminPanel() {
   const handleOpenModal = (match = null) => {
     if (match) {
       setEditingMatch(match)
+      // Find category index by name or default to empty
+      const getCat = (name) => match.categories?.find(c => c.name === name) || {}
       setFormData({
         team1: match.team1,
         team2: match.team2,
@@ -69,18 +98,26 @@ export default function AdminPanel() {
         city: match.city,
         startingPrice: match.startingPrice,
         image: match.image,
-        platinumPrice: match.categories[0]?.price || '',
-        platinumRows: match.categories[0]?.rows || '',
-        platinumSeatsPerRow: match.categories[0]?.seatsPerRow || '',
-        goldPrice: match.categories[1]?.price || '',
-        goldRows: match.categories[1]?.rows || '',
-        goldSeatsPerRow: match.categories[1]?.seatsPerRow || '',
-        silverPrice: match.categories[2]?.price || '',
-        silverRows: match.categories[2]?.rows || '',
-        silverSeatsPerRow: match.categories[2]?.seatsPerRow || '',
-        generalPrice: match.categories[3]?.price || '',
-        generalRows: match.categories[3]?.rows || '',
-        generalSeatsPerRow: match.categories[3]?.seatsPerRow || ''
+        // VIP (highest tier)
+        vipPrice: getCat('VIP').price || '',
+        vipRows: getCat('VIP').rows || '',
+        vipSeatsPerRow: getCat('VIP').seatsPerRow || '',
+        // Premium
+        premiumPrice: getCat('Premium').price || '',
+        premiumRows: getCat('Premium').rows || '',
+        premiumSeatsPerRow: getCat('Premium').seatsPerRow || '',
+        // Gold
+        goldPrice: getCat('Gold').price || '',
+        goldRows: getCat('Gold').rows || '',
+        goldSeatsPerRow: getCat('Gold').seatsPerRow || '',
+        // Silver
+        silverPrice: getCat('Silver').price || '',
+        silverRows: getCat('Silver').rows || '',
+        silverSeatsPerRow: getCat('Silver').seatsPerRow || '',
+        // General
+        generalPrice: getCat('General').price || '',
+        generalRows: getCat('General').rows || '',
+        generalSeatsPerRow: getCat('General').seatsPerRow || ''
       })
       setPreviewImage(match.image)
     } else {
@@ -96,9 +133,12 @@ export default function AdminPanel() {
         city: '',
         startingPrice: '',
         image: '',
-        platinumPrice: '',
-        platinumRows: '',
-        platinumSeatsPerRow: '',
+        vipPrice: '',
+        vipRows: '',
+        vipSeatsPerRow: '',
+        premiumPrice: '',
+        premiumRows: '',
+        premiumSeatsPerRow: '',
         goldPrice: '',
         goldRows: '',
         goldSeatsPerRow: '',
@@ -144,10 +184,11 @@ export default function AdminPanel() {
     setApiError(null)
     
     const categories = [
-      { name: 'Platinum', price: Number(formData.platinumPrice) || 8000, rows: Number(formData.platinumRows) || 5, seatsPerRow: Number(formData.platinumSeatsPerRow) || 20 },
-      { name: 'Gold', price: Number(formData.goldPrice) || 5000, rows: Number(formData.goldRows) || 8, seatsPerRow: Number(formData.goldSeatsPerRow) || 25 },
-      { name: 'Silver', price: Number(formData.silverPrice) || 3000, rows: Number(formData.silverRows) || 10, seatsPerRow: Number(formData.silverSeatsPerRow) || 30 },
-      { name: 'General', price: Number(formData.generalPrice) || 1500, rows: Number(formData.generalRows) || 15, seatsPerRow: Number(formData.generalSeatsPerRow) || 40 }
+      { name: 'VIP', price: Number(formData.vipPrice) || 10000, rows: Number(formData.vipRows) || 4, seatsPerRow: Number(formData.vipSeatsPerRow) || 15, color: '#8B5CF6' },
+      { name: 'Premium', price: Number(formData.premiumPrice) || 7500, rows: Number(formData.premiumRows) || 6, seatsPerRow: Number(formData.premiumSeatsPerRow) || 20, color: '#F59E0B' },
+      { name: 'Gold', price: Number(formData.goldPrice) || 5000, rows: Number(formData.goldRows) || 8, seatsPerRow: Number(formData.goldSeatsPerRow) || 25, color: '#EAB308' },
+      { name: 'Silver', price: Number(formData.silverPrice) || 3500, rows: Number(formData.silverRows) || 10, seatsPerRow: Number(formData.silverSeatsPerRow) || 30, color: '#9CA3AF' },
+      { name: 'General', price: Number(formData.generalPrice) || 1500, rows: Number(formData.generalRows) || 15, seatsPerRow: Number(formData.generalSeatsPerRow) || 40, color: '#22C55E' }
     ]
 
     const matchData = {
@@ -188,6 +229,26 @@ export default function AdminPanel() {
       } catch (err) {
         alert('Failed to delete: ' + err.message)
       }
+    }
+  }
+
+  // Handle payment settings update
+  const handlePaymentSettingsUpdate = async (e) => {
+    e.preventDefault()
+    setPaymentSettingsLoading(true)
+    setPaymentSettingsError(null)
+    
+    try {
+      await settingsAPI.updatePaymentSettings({
+        upiId: paymentSettings.upiId,
+        upiName: paymentSettings.upiName
+      })
+      alert('Payment settings updated successfully!')
+    } catch (err) {
+      setPaymentSettingsError(err.message)
+      alert('Failed to update: ' + err.message)
+    } finally {
+      setPaymentSettingsLoading(false)
     }
   }
 
@@ -291,36 +352,113 @@ export default function AdminPanel() {
             <div>
               <h3 className="text-lg font-medium text-[#222222] mb-4">Ticket Categories</h3>
               <div className="space-y-4">
-                <div className="p-4 bg-purple-50 rounded-lg">
-                  <h4 className="font-medium text-purple-700 mb-3">Platinum</h4>
+                {/* VIP */}
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-700 mb-3 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-purple-500"></span>
+                    VIP
+                  </h4>
                   <div className="grid grid-cols-3 gap-3">
-                    <input type="number" name="platinumPrice" value={formData.platinumPrice} onChange={handleInputChange} placeholder="Price (₹)" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="platinumRows" value={formData.platinumRows} onChange={handleInputChange} placeholder="Rows" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="platinumSeatsPerRow" value={formData.platinumSeatsPerRow} onChange={handleInputChange} placeholder="Seats per row" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
+                    <div>
+                      <label className="text-xs text-purple-600 mb-1 block">Price (₹)</label>
+                      <input type="number" name="vipPrice" value={formData.vipPrice} onChange={handleInputChange} placeholder="e.g., 10000" className="w-full px-3 py-2 border border-purple-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-purple-600 mb-1 block">Rows</label>
+                      <input type="number" name="vipRows" value={formData.vipRows} onChange={handleInputChange} placeholder="e.g., 4" className="w-full px-3 py-2 border border-purple-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-purple-600 mb-1 block">Seats/Row</label>
+                      <input type="number" name="vipSeatsPerRow" value={formData.vipSeatsPerRow} onChange={handleInputChange} placeholder="e.g., 15" className="w-full px-3 py-2 border border-purple-200 rounded-md text-sm focus:ring-2 focus:ring-purple-500" />
+                    </div>
                   </div>
                 </div>
-                <div className="p-4 bg-yellow-50 rounded-lg">
-                  <h4 className="font-medium text-yellow-700 mb-3">Gold</h4>
+                
+                {/* Premium */}
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <h4 className="font-medium text-amber-700 mb-3 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-amber-500"></span>
+                    Premium
+                  </h4>
                   <div className="grid grid-cols-3 gap-3">
-                    <input type="number" name="goldPrice" value={formData.goldPrice} onChange={handleInputChange} placeholder="Price (₹)" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="goldRows" value={formData.goldRows} onChange={handleInputChange} placeholder="Rows" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="goldSeatsPerRow" value={formData.goldSeatsPerRow} onChange={handleInputChange} placeholder="Seats per row" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
+                    <div>
+                      <label className="text-xs text-amber-600 mb-1 block">Price (₹)</label>
+                      <input type="number" name="premiumPrice" value={formData.premiumPrice} onChange={handleInputChange} placeholder="e.g., 7500" className="w-full px-3 py-2 border border-amber-200 rounded-md text-sm focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-amber-600 mb-1 block">Rows</label>
+                      <input type="number" name="premiumRows" value={formData.premiumRows} onChange={handleInputChange} placeholder="e.g., 6" className="w-full px-3 py-2 border border-amber-200 rounded-md text-sm focus:ring-2 focus:ring-amber-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-amber-600 mb-1 block">Seats/Row</label>
+                      <input type="number" name="premiumSeatsPerRow" value={formData.premiumSeatsPerRow} onChange={handleInputChange} placeholder="e.g., 20" className="w-full px-3 py-2 border border-amber-200 rounded-md text-sm focus:ring-2 focus:ring-amber-500" />
+                    </div>
                   </div>
                 </div>
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-700 mb-3">Silver</h4>
+                
+                {/* Gold */}
+                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <h4 className="font-medium text-yellow-700 mb-3 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
+                    Gold
+                  </h4>
                   <div className="grid grid-cols-3 gap-3">
-                    <input type="number" name="silverPrice" value={formData.silverPrice} onChange={handleInputChange} placeholder="Price (₹)" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="silverRows" value={formData.silverRows} onChange={handleInputChange} placeholder="Rows" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="silverSeatsPerRow" value={formData.silverSeatsPerRow} onChange={handleInputChange} placeholder="Seats per row" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
+                    <div>
+                      <label className="text-xs text-yellow-600 mb-1 block">Price (₹)</label>
+                      <input type="number" name="goldPrice" value={formData.goldPrice} onChange={handleInputChange} placeholder="e.g., 5000" className="w-full px-3 py-2 border border-yellow-200 rounded-md text-sm focus:ring-2 focus:ring-yellow-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-yellow-600 mb-1 block">Rows</label>
+                      <input type="number" name="goldRows" value={formData.goldRows} onChange={handleInputChange} placeholder="e.g., 8" className="w-full px-3 py-2 border border-yellow-200 rounded-md text-sm focus:ring-2 focus:ring-yellow-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-yellow-600 mb-1 block">Seats/Row</label>
+                      <input type="number" name="goldSeatsPerRow" value={formData.goldSeatsPerRow} onChange={handleInputChange} placeholder="e.g., 25" className="w-full px-3 py-2 border border-yellow-200 rounded-md text-sm focus:ring-2 focus:ring-yellow-500" />
+                    </div>
                   </div>
                 </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <h4 className="font-medium text-green-700 mb-3">General</h4>
+                
+                {/* Silver */}
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="font-medium text-gray-700 mb-3 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-gray-400"></span>
+                    Silver
+                  </h4>
                   <div className="grid grid-cols-3 gap-3">
-                    <input type="number" name="generalPrice" value={formData.generalPrice} onChange={handleInputChange} placeholder="Price (₹)" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="generalRows" value={formData.generalRows} onChange={handleInputChange} placeholder="Rows" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
-                    <input type="number" name="generalSeatsPerRow" value={formData.generalSeatsPerRow} onChange={handleInputChange} placeholder="Seats per row" className="px-3 py-2 border border-[#E5E5E5] rounded-md text-sm" />
+                    <div>
+                      <label className="text-xs text-gray-600 mb-1 block">Price (₹)</label>
+                      <input type="number" name="silverPrice" value={formData.silverPrice} onChange={handleInputChange} placeholder="e.g., 3500" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-gray-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600 mb-1 block">Rows</label>
+                      <input type="number" name="silverRows" value={formData.silverRows} onChange={handleInputChange} placeholder="e.g., 10" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-gray-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-600 mb-1 block">Seats/Row</label>
+                      <input type="number" name="silverSeatsPerRow" value={formData.silverSeatsPerRow} onChange={handleInputChange} placeholder="e.g., 30" className="w-full px-3 py-2 border border-gray-200 rounded-md text-sm focus:ring-2 focus:ring-gray-500" />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* General */}
+                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h4 className="font-medium text-green-700 mb-3 flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full bg-green-500"></span>
+                    General
+                  </h4>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs text-green-600 mb-1 block">Price (₹)</label>
+                      <input type="number" name="generalPrice" value={formData.generalPrice} onChange={handleInputChange} placeholder="e.g., 1500" className="w-full px-3 py-2 border border-green-200 rounded-md text-sm focus:ring-2 focus:ring-green-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-green-600 mb-1 block">Rows</label>
+                      <input type="number" name="generalRows" value={formData.generalRows} onChange={handleInputChange} placeholder="e.g., 15" className="w-full px-3 py-2 border border-green-200 rounded-md text-sm focus:ring-2 focus:ring-green-500" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-green-600 mb-1 block">Seats/Row</label>
+                      <input type="number" name="generalSeatsPerRow" value={formData.generalSeatsPerRow} onChange={handleInputChange} placeholder="e.g., 40" className="w-full px-3 py-2 border border-green-200 rounded-md text-sm focus:ring-2 focus:ring-green-500" />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -342,79 +480,175 @@ export default function AdminPanel() {
   }
 
   const downloadTicket = async (booking) => {
-    // Create a temporary div for the ticket
-    const ticketDiv = document.createElement('div')
-    ticketDiv.style.width = '400px'
-    ticketDiv.style.background = 'white'
-    ticketDiv.style.fontFamily = 'Segoe UI, Tahoma, Geneva, Verdana, sans-serif'
-    ticketDiv.innerHTML = `
-      <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-        <div style="background: linear-gradient(135deg, #F84464 0%, #8B5CF6 100%); color: white; padding: 24px; text-align: center;">
-          <h1 style="font-size: 20px; font-weight: bold; margin: 0;">🏟️ TICKETNEST</h1>
-          <p style="font-size: 12px; margin: 4px 0 0 0; opacity: 0.9;">Official Match Ticket</p>
+    // Create a temporary container with proper styling
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '0'
+    document.body.appendChild(container)
+    
+    // Create the ticket element with full HTML/CSS styling (like the original HTML download)
+    const ticketWrapper = document.createElement('div')
+    ticketWrapper.style.width = '400px'
+    ticketWrapper.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    ticketWrapper.style.padding = '20px'
+    ticketWrapper.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    ticketWrapper.style.minHeight = '100vh'
+    ticketWrapper.style.display = 'flex'
+    ticketWrapper.style.alignItems = 'center'
+    ticketWrapper.style.justifyContent = 'center'
+    
+    ticketWrapper.innerHTML = `
+      <div style="
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 400px;
+        width: 100%;
+      ">
+        <!-- Header -->
+        <div style="
+          background: linear-gradient(135deg, #F84464 0%, #8B5CF6 100%);
+          color: white;
+          padding: 24px;
+          text-align: center;
+        ">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ TICKETNEST</h1>
+          <p style="font-size: 14px; margin: 0; opacity: 0.9;">Official Match Ticket</p>
         </div>
         
-        <div style="padding: 20px;">
-          <div style="text-align: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px dashed #E5E5E5;">
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-              <span style="font-size: 16px; font-weight: bold; color: #222;">${booking.match.team1Short}</span>
-              <span style="font-size: 12px; color: #F84464; font-weight: bold;">VS</span>
-              <span style="font-size: 16px; font-weight: bold; color: #222;">${booking.match.team2Short}</span>
+        <!-- Body -->
+        <div style="padding: 24px;">
+          <!-- Match Info -->
+          <div style="
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #E5E5E5;
+          ">
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 12px;
+              margin-bottom: 12px;
+            ">
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: bold; color: #222;">${booking.match.team1Short}</div>
+              </div>
+              <div style="font-size: 14px; color: #F84464; font-weight: bold;">VS</div>
+              <div style="text-align: center;">
+                <div style="font-size: 18px; font-weight: bold; color: #222;">${booking.match.team2Short}</div>
+              </div>
             </div>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${booking.match.stadium}</p>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${new Date(booking.match.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-            <p style="font-size: 11px; color: #666; margin: 4px 0;">${booking.match.time}</p>
+            <div style="font-size: 13px; color: #666; line-height: 1.6;">
+              ${booking.match.stadium}<br>
+              ${new Date(booking.match.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}<br>
+              ${booking.match.time}
+            </div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Customer Name</p>
-            <p style="font-size: 13px; color: #222; font-weight: 500; margin: 0;">${booking.customerName}</p>
+          <!-- Customer Info -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Customer Name</div>
+            <div style="font-size: 14px; color: #222; font-weight: 500;">${booking.customerName}</div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Contact</p>
-            <p style="font-size: 11px; color: #666; margin: 0;">${booking.customerPhone} • ${booking.customerEmail}</p>
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Contact</div>
+            <div style="font-size: 13px; color: #666;">${booking.customerPhone} • ${booking.customerEmail}</div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Selected Seats (${booking.seats.length})</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+          <!-- Seats -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Selected Seats (${booking.seats.length})</div>
+            <div style="
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+              gap: 8px;
+            ">
               ${booking.seats.map(seat => `
-                <span style="background: #F5F5F5; padding: 4px 8px; border-radius: 4px; font-size: 10px; color: #222;">${seat.section}-R${seat.row}-S${seat.seat}</span>
+                <div style="
+                  background: #F5F5F5;
+                  padding: 6px 10px;
+                  border-radius: 6px;
+                  font-size: 12px;
+                  text-align: center;
+                  color: #222;
+                ">${seat.section}-R${seat.row}-S${seat.seat}</div>
               `).join('')}
             </div>
           </div>
           
-          <div style="margin-bottom: 16px;">
-            <p style="font-size: 10px; color: #999; text-transform: uppercase; margin: 0 0 4px 0;">Payment Method</p>
-            <p style="font-size: 11px; color: #222; font-weight: 500; margin: 0;">${booking.paymentMethod}</p>
+          <!-- Payment Method -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Payment Method</div>
+            <div style="font-size: 14px; color: #222; font-weight: 500;">${booking.paymentMethod}</div>
           </div>
           
-          <div style="background: #F8F9FA; border-radius: 8px; padding: 12px;">
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+          <!-- Price Section -->
+          <div style="
+            background: #F8F9FA;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+          ">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>Subtotal (${booking.seats.length} tickets)</span>
               <span>₹${booking.totalPrice.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>Convenience Fee</span>
               <span>₹${booking.convenienceFee.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; color: #666;">
               <span>GST (18%)</span>
               <span>₹${booking.gst.toLocaleString()}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #F84464; border-top: 1px solid #E5E5E5; padding-top: 8px; margin-top: 8px;">
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              font-size: 16px;
+              font-weight: bold;
+              color: #F84464;
+              border-top: 1px solid #E5E5E5;
+              padding-top: 12px;
+              margin-top: 12px;
+            ">
               <span>Total Paid</span>
               <span>₹${booking.finalTotal.toLocaleString()}</span>
             </div>
           </div>
         </div>
         
-        <div style="height: 30px; background: repeating-linear-gradient(90deg, #222 0px, #222 2px, transparent 2px, transparent 4px); margin: 8px 30px;"></div>
+        <!-- Barcode -->
+        <div style="
+          height: 40px;
+          background: repeating-linear-gradient(
+            90deg,
+            #222 0px,
+            #222 2px,
+            transparent 2px,
+            transparent 4px
+          );
+          margin: 12px 40px;
+        "></div>
         
-        <div style="text-align: center; padding: 16px; background: #F8F9FA;">
-          <div style="width: 100px; height: 100px; background: white; border: 2px solid #E5E5E5; border-radius: 8px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center;">
-            <svg viewBox="0 0 100 100" width="80" height="80">
+        <!-- QR Section -->
+        <div style="text-align: center; padding: 20px; background: #F8F9FA;">
+          <div style="
+            width: 150px;
+            height: 150px;
+            background: white;
+            border: 2px solid #E5E5E5;
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <svg viewBox="0 0 100 100" width="120" height="120">
               <rect fill="white" width="100" height="100"/>
               <rect fill="#222" x="10" y="10" width="25" height="25"/>
               <rect fill="#222" x="65" y="10" width="25" height="25"/>
@@ -427,48 +661,65 @@ export default function AdminPanel() {
               <rect fill="#222" x="70" y="60" width="5" height="5"/>
               <rect fill="#222" x="60" y="70" width="5" height="5"/>
               <rect fill="#222" x="70" y="70" width="5" height="5"/>
+              <rect fill="#222" x="40" y="20" width="5" height="5"/>
+              <rect fill="#222" x="50" y="20" width="5" height="5"/>
+              <rect fill="#222" x="40" y="30" width="5" height="5"/>
+              <rect fill="#222" x="50" y="30" width="5" height="5"/>
+              <rect fill="#222" x="20" y="40" width="5" height="5"/>
+              <rect fill="#222" x="30" y="40" width="5" height="5"/>
+              <rect fill="#222" x="20" y="50" width="5" height="5"/>
+              <rect fill="#222" x="30" y="50" width="5" height="5"/>
             </svg>
           </div>
-          <p style="font-size: 10px; color: #666; font-family: monospace; margin: 0;">${booking.id}</p>
+          <div style="font-size: 12px; color: #666; font-family: monospace;">${booking.id}</div>
         </div>
         
-        <div style="text-align: center; padding: 12px; background: white; border-top: 1px solid #E5E5E5;">
-          <p style="font-size: 9px; color: #999; margin: 0;">Thank you for booking with TicketNest!</p>
-          <p style="font-size: 9px; color: #999; margin: 4px 0 0 0;">Please arrive 1 hour before the match</p>
+        <!-- Footer -->
+        <div style="text-align: center; padding: 16px; font-size: 11px; color: #999; border-top: 1px solid #E5E5E5;">
+          <p style="margin: 0;">Thank you for booking with TicketNest!</p>
+          <p style="margin: 4px 0 0 0;">Please arrive 1 hour before the match • Carry valid ID proof</p>
         </div>
       </div>
     `
     
-    // Append to body temporarily
-    ticketDiv.style.position = 'absolute'
-    ticketDiv.style.left = '-9999px'
-    document.body.appendChild(ticketDiv)
+    container.appendChild(ticketWrapper)
     
     try {
-      // Generate PDF using html2canvas and jsPDF
-      const canvas = await html2canvas(ticketDiv, {
-        scale: 2,
+      // Wait for fonts to load
+      await document.fonts.ready
+      
+      // Generate high-quality canvas
+      const canvas = await html2canvas(ticketWrapper, {
+        scale: 3,
         useCORS: true,
-        logging: false
+        logging: false,
+        backgroundColor: null,
+        windowWidth: 440,
+        windowHeight: ticketWrapper.scrollHeight
       })
       
-      const imgData = canvas.toDataURL('image/png')
+      // Create PDF with proper dimensions
+      const imgData = canvas.toDataURL('image/png', 1.0)
       const pdf = new jsPDF('p', 'mm', 'a4')
       
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+      const imgWidth = pageWidth
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      // Center the ticket on the page
+      const xOffset = 0
+      const yOffset = imgHeight > pageHeight ? 0 : (pageHeight - imgHeight) / 2
+      
+      pdf.addImage(imgData, 'PNG', xOffset, yOffset, imgWidth, Math.min(imgHeight, pageHeight))
       pdf.save(`Ticket-${booking.id}.pdf`)
       
-      // Show success message
       alert('Ticket downloaded successfully!')
     } catch (error) {
       console.error('PDF generation failed:', error)
       alert('Failed to download ticket. Please try again.')
     } finally {
-      // Clean up
-      document.body.removeChild(ticketDiv)
+      document.body.removeChild(container)
     }
   }
 
@@ -751,6 +1002,81 @@ export default function AdminPanel() {
     </div>
   )
 
+  const renderPaymentSettings = () => (
+    <div className="max-w-2xl">
+      <div className="bg-white rounded-lg border border-[#E5E5E5] p-6">
+        <h2 className="text-xl font-bold text-[#222222] mb-6">Payment Settings</h2>
+        
+        {paymentSettingsError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600">❌ {paymentSettingsError}</p>
+          </div>
+        )}
+        
+        <form onSubmit={handlePaymentSettingsUpdate} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-[#222222] mb-2">
+              UPI ID (Where all payments will be received)
+            </label>
+            <input
+              type="text"
+              value={paymentSettings.upiId}
+              onChange={(e) => setPaymentSettings(prev => ({ ...prev, upiId: e.target.value }))}
+              placeholder="e.g., yourname@upi"
+              className="w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:ring-2 focus:ring-[#F84464] focus:border-[#F84464]"
+              required
+            />
+            <p className="text-xs text-[#999999] mt-1">
+              All customer payments will be sent to this UPI ID
+            </p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-[#222222] mb-2">
+              UPI Display Name
+            </label>
+            <input
+              type="text"
+              value={paymentSettings.upiName}
+              onChange={(e) => setPaymentSettings(prev => ({ ...prev, upiName: e.target.value }))}
+              placeholder="e.g., Your Business Name"
+              className="w-full px-4 py-3 border border-[#E5E5E5] rounded-lg text-sm focus:ring-2 focus:ring-[#F84464] focus:border-[#F84464]"
+              required
+            />
+            <p className="text-xs text-[#999999] mt-1">
+              This name will be shown to customers during payment
+            </p>
+          </div>
+          
+          <div className="bg-[#F5F5F5] rounded-lg p-4">
+            <h4 className="font-medium text-[#222222] mb-2">Current Settings Summary</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#666666]">UPI ID:</span>
+                <span className="font-medium text-[#222222]">{paymentSettings.upiId || 'Not set'}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#666666]">Display Name:</span>
+                <span className="font-medium text-[#222222]">{paymentSettings.upiName || 'Not set'}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end pt-4 border-t border-[#E5E5E5]">
+            <button
+              type="submit"
+              disabled={paymentSettingsLoading}
+              className="px-6 py-2.5 bg-[#F84464] text-white font-medium rounded-lg hover:bg-[#E03454] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="w-4 h-4" />
+              {paymentSettingsLoading ? 'Saving...' : 'Save Payment Settings'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-[#F5F5F5]">
       <div className="sticky top-0 z-40 bg-white border-b border-[#E5E5E5]">
@@ -772,7 +1098,8 @@ export default function AdminPanel() {
           {[
             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
             { id: 'events', label: 'Events', icon: Calendar },
-            { id: 'bookings', label: 'Bookings', icon: CreditCard }
+            { id: 'bookings', label: 'Bookings', icon: CreditCard },
+            { id: 'payment', label: 'Payment Settings', icon: DollarSign }
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${activeTab === tab.id ? 'bg-[#F84464] text-white' : 'text-[#666666] hover:text-[#222222] hover:bg-[#F5F5F5]'}`}>
               <tab.icon className="w-4 h-4" />
@@ -784,6 +1111,7 @@ export default function AdminPanel() {
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'events' && renderEvents()}
         {activeTab === 'bookings' && renderBookings()}
+        {activeTab === 'payment' && renderPaymentSettings()}
         
         {renderModal()}
       </div>

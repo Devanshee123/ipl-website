@@ -86,4 +86,10 @@ export const adminAPI = {
   updateMatchStatus: (id, status) => api(`/admin/matches/${id}/status`, { method: 'PUT', body: { status } })
 }
 
+// Settings APIs
+export const settingsAPI = {
+  getPaymentSettings: () => api('/settings/payment'),
+  updatePaymentSettings: (data) => api('/settings/payment', { method: 'PUT', body: data })
+}
+
 export default api
