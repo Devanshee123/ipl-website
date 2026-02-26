@@ -53,7 +53,7 @@ export default function ConfirmationPage() {
           padding: 24px;
           text-align: center;
         ">
-          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ TICKETNEST</h1>
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ BOOKMYSHOW</h1>
           <p style="font-size: 14px; margin: 0; opacity: 0.9;">Official Match Ticket</p>
         </div>
         
@@ -215,7 +215,7 @@ export default function ConfirmationPage() {
         
         <!-- Footer -->
         <div style="text-align: center; padding: 16px; font-size: 11px; color: #999; border-top: 1px solid #E5E5E5;">
-          <p style="margin: 0;">Thank you for booking with TicketNest!</p>
+          <p style="margin: 0;">Thank you for booking with BookMyShow!</p>
           <p style="margin: 4px 0 0 0;">Please arrive 1 hour before the match • Carry valid ID proof</p>
         </div>
       </div>
@@ -391,7 +391,7 @@ export default function ConfirmationPage() {
             <li>• Please arrive at least 1 hour before the event</li>
             <li>• Carry a valid ID proof along with your ticket</li>
             <li>• Entry gates close 30 minutes after event start</li>
-            <li>• For help, contact support@ticketnest.com</li>
+            <li>• For help, contact support@bookmyshow.com</li>
           </ul>
         </div>
       </div>

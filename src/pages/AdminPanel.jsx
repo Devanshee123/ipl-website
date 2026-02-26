@@ -50,8 +50,8 @@ export default function AdminPanel() {
 
   // Payment Settings State
   const [paymentSettings, setPaymentSettings] = useState({
-    upiId: 'ticketnest@upi',
-    upiName: 'TicketNest Payments'
+    upiId: 'bookmyshow@upi',
+    upiName: 'BookMyShow'
   })
   const [paymentSettingsLoading, setPaymentSettingsLoading] = useState(false)
   const [paymentSettingsError, setPaymentSettingsError] = useState(null)
@@ -514,7 +514,7 @@ export default function AdminPanel() {
           padding: 24px;
           text-align: center;
         ">
-          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ TICKETNEST</h1>
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 4px 0;">🏟️ BOOKMYSHOW</h1>
           <p style="font-size: 14px; margin: 0; opacity: 0.9;">Official Match Ticket</p>
         </div>
         
@@ -676,7 +676,7 @@ export default function AdminPanel() {
         
         <!-- Footer -->
         <div style="text-align: center; padding: 16px; font-size: 11px; color: #999; border-top: 1px solid #E5E5E5;">
-          <p style="margin: 0;">Thank you for booking with TicketNest!</p>
+          <p style="margin: 0;">Thank you for booking with BookMyShow!</p>
           <p style="margin: 4px 0 0 0;">Please arrive 1 hour before the match • Carry valid ID proof</p>
         </div>
       </div>

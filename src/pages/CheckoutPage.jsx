@@ -170,8 +170,8 @@ export default function CheckoutPage() {
     
     // Generate UPI payment URL
     // Using a demo merchant UPI ID - in production, this should be your actual merchant UPI
-    const merchantUpiId = 'ticketnest@upi'
-    const merchantName = 'TicketNest'
+    const merchantUpiId = 'bookmyshow@upi'
+    const merchantName = 'BookMyShow'
     const transactionNote = `IPL Tickets - ${selectedMatch.team1Short} vs ${selectedMatch.team2Short}`
     const amount = total.toFixed(2)
     const transactionId = `TN${Date.now()}`
@@ -456,7 +456,7 @@ export default function CheckoutPage() {
               {/* Other UPI Apps Option */}
               <button
                 onClick={() => {
-                  const standardUpiUrl = `upi://pay?pa=${encodeURIComponent('ticketnest@upi')}&pn=${encodeURIComponent('TicketNest')}&am=${total.toFixed(2)}&tn=${encodeURIComponent(`IPL Tickets - ${selectedMatch.team1Short} vs ${selectedMatch.team2Short}`)}&tr=TN${Date.now()}&cu=INR`
+                  const standardUpiUrl = `upi://pay?pa=${encodeURIComponent('bookmyshow@upi')}&pn=${encodeURIComponent('BookMyShow')}&am=${total.toFixed(2)}&tn=${encodeURIComponent(`IPL Tickets - ${selectedMatch.team1Short} vs ${selectedMatch.team2Short}`)}&tr=TN${Date.now()}&cu=INR`
                   window.location.href = standardUpiUrl
                 }}
                 className="w-full mt-4 p-4 rounded-xl border border-[#E5E5E5] hover:border-[#F84464] hover:bg-[#F5F5F5] transition-all duration-200 flex items-center justify-center gap-2"

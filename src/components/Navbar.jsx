@@ -14,8 +14,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <button onClick={() => setCurrentView('home')} className="text-xl font-bold text-[#F84464]">
-              TicketNest
+            <button onClick={() => setCurrentView('home')}>
+              <img src="/images/bookmyshow-logo-removebg-preview.png" alt="BookMyShow" className="h-12 w-auto" />
             </button>
           </div>
 

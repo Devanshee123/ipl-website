@@ -30,7 +30,7 @@ export default function Hero() {
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 px-3 py-1 bg-white text-gray-800 rounded-full text-sm font-medium mb-4 border border-white/30">
             <span className="w-2 h-2 bg-[#F84464] rounded-full"></span>
-            Live Sports 2024
+            Live Sports 2026
           </span>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 leading-tight">
             Experience Live Cricket Like Never Before

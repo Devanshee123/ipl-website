@@ -18,10 +18,21 @@ export default function MatchDetailsPage() {
   // Load sold seats from bookings for this match when stadium modal opens
   useEffect(() => {
     if (showStadiumModal && selectedMatch && bookings.length > 0) {
-      // Find all bookings for this match
-      const matchBookings = bookings.filter(b => 
-        b.matchId === selectedMatch._id || b.matchId === selectedMatch.id
-      )
+      // Get selected match ID in string format
+      const selectedMatchId = String(selectedMatch._id || selectedMatch.id || '')
+      
+      // Find all bookings for this match with flexible ID comparison
+      const matchBookings = bookings.filter(b => {
+        const bookingMatchId = String(b.matchId || '')
+        return bookingMatchId === selectedMatchId || 
+               bookingMatchId === String(selectedMatch._id || '') ||
+               bookingMatchId === String(selectedMatch.id || '')
+      })
+      
+      console.log('🔍 Selected Match ID:', selectedMatchId)
+      console.log('🔍 Total bookings:', bookings.length)
+      console.log('🔍 Match bookings found:', matchBookings.length)
+      console.log('🔍 Booking matchIds:', bookings.map(b => b.matchId))
       
       // Extract all seat IDs from these bookings
       const soldSeatIds = matchBookings.flatMap(b => 
@@ -29,6 +40,7 @@ export default function MatchDetailsPage() {
       )
       
       console.log('🎟️ Sold seats loaded:', soldSeatIds.length, 'seats')
+      console.log('🎟️ Sold seat IDs:', soldSeatIds)
       setSoldSeats(soldSeatIds)
     }
   }, [showStadiumModal, selectedMatch, bookings])
@@ -364,7 +376,7 @@ export default function MatchDetailsPage() {
               </div>
               <div className="p-4 bg-[#F5F5F5] rounded-lg">
                 <h4 className="font-medium text-[#222222] mb-2 text-sm">Need Help?</h4>
-                <p className="text-xs text-[#666666]">Contact support@ticketnest.com or call 1800-123-4567</p>
+                <p className="text-xs text-[#666666]">Contact support@bookmyshow.com or call 1800-123-4567</p>
               </div>
             </div>
           </div>
