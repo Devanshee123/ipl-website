@@ -338,7 +338,7 @@ export default function ConfirmationPage() {
                 <div>
                   <p className="font-medium text-[#222222]">{currentBooking.seats.length} Seats</p>
                   <p className="text-sm text-[#666666]">
-                    {currentBooking.seats.map(s => `${s.row}${s.number}`).join(', ')}
+                    {currentBooking.seats.map(s => `${s.section || s.category || 'Sec'}-${s.row}${s.seat || s.number || ''}`).join(', ')}
                   </p>
                 </div>
               </div>

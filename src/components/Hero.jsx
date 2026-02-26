@@ -4,6 +4,17 @@ import { ArrowRight, Ticket } from 'lucide-react'
 export default function Hero() {
   const { setCurrentView } = useAppContext()
 
+  const handleBookNow = () => {
+    setCurrentView('home')
+    // Scroll to match cards section after a short delay
+    setTimeout(() => {
+      const matchesSection = document.getElementById('matches-section')
+      if (matchesSection) {
+        matchesSection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 100)
+  }
+
   return (
     <section className="relative bg-gradient-to-br from-[#F84464] to-[#E03454] text-white overflow-hidden">
       {/* Background Image */}
@@ -29,7 +40,7 @@ export default function Hero() {
           </p>
           <div className="flex flex-wrap gap-3">
             <button
-              onClick={() => setCurrentView('home')}
+              onClick={handleBookNow}
               className="px-5 py-2.5 bg-[#F84464] text-white font-medium rounded-md hover:bg-[#E03454] transition-all duration-200 flex items-center gap-2"
             >
               Book Now

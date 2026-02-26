@@ -87,9 +87,7 @@ export default function CheckoutPage() {
     } else if (!/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
       newErrors.phone = 'Invalid phone number'
     }
-    if (paymentMethod === 'upi' && !formData.upiId.trim()) {
-      newErrors.upiId = 'UPI ID is required'
-    }
+    // UPI ID is now optional - removed mandatory validation
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -98,11 +96,8 @@ export default function CheckoutPage() {
     e.preventDefault()
     if (!validateForm()) return
 
-    if (paymentMethod === 'upi') {
-      setShowUpiModal(true)
-    } else {
-      handleOtherPayment()
-    }
+    // Show payment app selection modal for all payment methods
+    setShowUpiModal(true)
   }
 
   const handleOtherPayment = async () => {
@@ -341,19 +336,6 @@ export default function CheckoutPage() {
                           {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-[#F84464]" />}
                         </div>
                       </button>
-                      
-                      {isSelected && method.id === 'upi' && (
-                        <div className="mt-3 ml-16">
-                          <input
-                            type="text"
-                            value={formData.upiId}
-                            onChange={(e) => handleInputChange('upiId', e.target.value)}
-                            placeholder="yourname@upi"
-                            className={`w-full max-w-sm px-4 py-3 bg-white border rounded-lg text-[#222222] text-sm placeholder:text-[#999999] focus:outline-none focus:border-[#F84464] transition-all duration-200 ${errors.upiId ? 'border-[#F84464]' : 'border-[#E5E5E5]'}`}
-                          />
-                          {errors.upiId && <p className="mt-1 text-xs text-[#F84464]">{errors.upiId}</p>}
-                        </div>
-                      )}
                     </div>
                   )
                 })}

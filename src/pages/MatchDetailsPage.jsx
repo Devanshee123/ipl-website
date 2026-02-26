@@ -1,18 +1,37 @@
 import { useAppContext } from '../App'
 import { ArrowLeft, MapPin, Calendar, Clock, ChevronRight, X, Car, Bus, Truck, Users, Bike } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function MatchDetailsPage() {
-  const { selectedMatch, setCurrentView, setSelectedCategory, setSelectedSeats } = useAppContext()
+  const { selectedMatch, setCurrentView, setSelectedCategory, setSelectedSeats, bookings } = useAppContext()
   const [showSeatCountModal, setShowSeatCountModal] = useState(false)
   const [showStadiumModal, setShowStadiumModal] = useState(false)
   const [selectedCategory, setSelectedCategoryLocal] = useState(null)
   const [seatCount, setSeatCount] = useState(2)
   const [selectedSeats, setSelectedSeatsLocal] = useState([])
+  const [soldSeats, setSoldSeats] = useState([])
   const [stadiumZoom, setStadiumZoom] = useState(1)
   const [stadiumPan, setStadiumPan] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
+  // Load sold seats from bookings for this match when stadium modal opens
+  useEffect(() => {
+    if (showStadiumModal && selectedMatch && bookings.length > 0) {
+      // Find all bookings for this match
+      const matchBookings = bookings.filter(b => 
+        b.matchId === selectedMatch._id || b.matchId === selectedMatch.id
+      )
+      
+      // Extract all seat IDs from these bookings
+      const soldSeatIds = matchBookings.flatMap(b => 
+        b.seats.map(s => s.id || `${s.section || s.category}-R${s.row}-${s.seat || s.number}`)
+      )
+      
+      console.log('🎟️ Sold seats loaded:', soldSeatIds.length, 'seats')
+      setSoldSeats(soldSeatIds)
+    }
+  }, [showStadiumModal, selectedMatch, bookings])
 
   if (!selectedMatch) {
     setCurrentView('home')
@@ -25,11 +44,11 @@ export default function MatchDetailsPage() {
 
   // Ensure all 5 categories exist with proper defaults
   const ensureCategories = (cats) => {
-    const defaultCategories = [
-      { name: 'VIP', price: 10000, rows: 4, seatsPerRow: 15, color: '#8B5CF6' },
-      { name: 'Premium', price: 7500, rows: 5, seatsPerRow: 20, color: '#F59E0B' },
+  const defaultCategories = [
+      { name: 'VIP', price: 10000, rows: 4, seatsPerRow: 15, color: '#9C27B0' },
+      { name: 'Premium', price: 7500, rows: 5, seatsPerRow: 20, color: '#EC4899' },
       { name: 'Gold', price: 5000, rows: 8, seatsPerRow: 25, color: '#EAB308' },
-      { name: 'Silver', price: 3500, rows: 10, seatsPerRow: 30, color: '#9CA3AF' },
+      { name: 'Silver', price: 3500, rows: 10, seatsPerRow: 30, color: '#3B82F6' },
       { name: 'General', price: 1500, rows: 15, seatsPerRow: 40, color: '#22C55E' }
     ]
     
@@ -64,6 +83,9 @@ export default function MatchDetailsPage() {
   }
 
   const handleStadiumSeatSelect = (seatId) => {
+    // Don't select if seat is sold
+    if (soldSeats.includes(seatId)) return
+    
     setSelectedSeatsLocal(prev => {
       if (prev.includes(seatId)) {
         return prev.filter(id => id !== seatId)
@@ -166,6 +188,32 @@ export default function MatchDetailsPage() {
     return 'Team Bus'
   }
 
+  // Get seat category color based on section and row
+  const getSeatCategoryColor = (sectionId, rowNum) => {
+    // C14-C17, rows 1-6 = VIP (Purple)
+    if (['C14', 'C15', 'C16', 'C17'].includes(sectionId) && rowNum >= 1 && rowNum <= 6) {
+      return '#9C27B0' // VIP
+    }
+    // All D sections = General (Green) - entire outer ring
+    if (sectionId.startsWith('D')) {
+      return '#22C55E' // General
+    }
+    // C13, C18 = Premium (Pink) - between blue and purple
+    if (['C13', 'C18'].includes(sectionId)) {
+      return '#EC4899' // Premium
+    }
+    // B12-B16, rows 1-3 = Gold (Yellow)
+    if (['B12', 'B13', 'B14', 'B15', 'B16'].includes(sectionId) && rowNum >= 1 && rowNum <= 3) {
+      return '#EAB308' // Gold
+    }
+    // C19, C12 = Silver (Blue)
+    if (['C19', 'C12'].includes(sectionId)) {
+      return '#3B82F6' // Silver
+    }
+    // Default = General (Green)
+    return '#22C55E' // General
+  }
+
   const generateStadiumSections = (category) => {
     if (!category) return []
     const sections = []
@@ -252,13 +300,13 @@ export default function MatchDetailsPage() {
                     className="relative h-40 p-4"
                     style={{ 
                       background: category.name === 'VIP' 
-                        ? 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)'
+                        ? 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)'
                         : category.name === 'Premium'
-                        ? 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)'
+                        ? 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)'
                         : category.name === 'Gold'
                         ? 'linear-gradient(135deg, #EAB308 0%, #FDE047 100%)'
                         : category.name === 'Silver'
-                        ? 'linear-gradient(135deg, #9CA3AF 0%, #D1D5DB 100%)'
+                        ? 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)'
                         : 'linear-gradient(135deg, #22C55E 0%, #86EFAC 100%)'
                     }}
                   >
@@ -405,18 +453,18 @@ export default function MatchDetailsPage() {
             </button>
           </div>
 
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden flex-col lg:flex-row">
             {/* Left Sidebar - Match Info & Expandable Price Categories */}
-            <div className="w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
+            <div className="w-full lg:w-80 bg-white border-r border-gray-200 flex flex-col overflow-hidden">
               {/* Match Info */}
               <div className="p-4 border-b border-gray-200 bg-white">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                    {selectedMatch.team1Short?.[0] || 'T1'}
+                  <div className="px-2 py-1 bg-red-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                    {selectedMatch.team1Short || 'T1'}
                   </div>
                   <span className="text-gray-400 text-xs">vs</span>
-                  <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">
-                    {selectedMatch.team2Short?.[0] || 'T2'}
+                  <div className="px-2 py-1 bg-green-600 rounded flex items-center justify-center text-white text-xs font-bold">
+                    {selectedMatch.team2Short || 'T2'}
                   </div>
                 </div>
                 <h4 className="font-semibold text-sm text-gray-900 mb-0.5">
@@ -427,56 +475,37 @@ export default function MatchDetailsPage() {
                 <p className="text-xs text-gray-400 mt-2">Please select the category of your choice. It will get highlighted on the layout.</p>
               </div>
 
-              {/* Price Categories - Dynamic from match data */}
+              {/* Price Categories - Simple Color Bars */}
               <div className="flex-1 overflow-y-auto">
-                {categories.map((category) => {
-                  const catColor = category.color || (
-                    category.name === 'VIP' ? '#8B5CF6' :
-                    category.name === 'Premium' ? '#F59E0B' :
-                    category.name === 'Gold' ? '#EAB308' :
-                    category.name === 'Silver' ? '#9CA3AF' :
-                    '#22C55E'
-                  )
-                  const bgColor = category.name === 'VIP' ? 'bg-purple-50' :
-                    category.name === 'Premium' ? 'bg-amber-50' :
-                    category.name === 'Gold' ? 'bg-yellow-50' :
-                    category.name === 'Silver' ? 'bg-gray-50' :
-                    'bg-green-50'
-                  const hoverBg = category.name === 'VIP' ? 'hover:bg-purple-100' :
-                    category.name === 'Premium' ? 'hover:bg-amber-100' :
-                    category.name === 'Gold' ? 'hover:bg-yellow-100' :
-                    category.name === 'Silver' ? 'hover:bg-gray-100' :
-                    'hover:bg-green-100'
+                <div className="flex flex-row lg:flex-col gap-2 p-2 lg:p-0 overflow-x-auto lg:overflow-x-hidden">
+                  {categories.map((category) => {
+                  const catColors = {
+                    'VIP': { bg: 'bg-purple-100', border: 'border-purple-500', text: 'text-purple-800', bar: '#9C27B0' },
+                    'Premium': { bg: 'bg-pink-100', border: 'border-pink-500', text: 'text-pink-800', bar: '#EC4899' },
+                    'Gold': { bg: 'bg-yellow-100', border: 'border-yellow-500', text: 'text-yellow-800', bar: '#EAB308' },
+                    'Silver': { bg: 'bg-blue-100', border: 'border-blue-500', text: 'text-blue-800', bar: '#3B82F6' },
+                    'General': { bg: 'bg-green-100', border: 'border-green-500', text: 'text-green-800', bar: '#22C55E' }
+                  }
+                  const colors = catColors[category.name] || catColors['General']
                   
                   return (
-                    <div key={category.name} className="border-b border-gray-100">
-                      <button 
-                        onClick={() => toggleCategory(category.price)}
-                        className={`w-full flex items-center justify-between p-3 hover:bg-gray-50 ${bgColor}`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: catColor }} />
-                          <span className="text-sm font-medium text-gray-700">₹{category.price?.toLocaleString()}</span>
-                          <span className="text-xs text-gray-500">({category.name})</span>
+                    <div 
+                      key={category.name} 
+                      className={`border-l-4 ${colors.border} ${colors.bg} p-3 mb-2 mx-2 rounded-r-lg`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div 
+                          className="w-4 h-12 rounded" 
+                          style={{ backgroundColor: colors.bar }}
+                        />
+                        <div className="flex-1">
+                          <div className={`font-bold ${colors.text}`}>{category.name}</div>
+                          <div className="text-sm text-gray-600">₹{category.price?.toLocaleString()}</div>
                         </div>
-                        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${expandedCategory === category.price ? 'rotate-90' : ''}`} />
-                      </button>
-                      {expandedCategory === category.price && (
-                        <div className={bgColor}>
-                          {Array.from({ length: Math.min(10, category.rows || 5) }).map((_, i) => (
-                            <button 
-                              key={i} 
-                              onClick={() => handleBlockSelect(`${category.name} Block ${String.fromCharCode(65 + i)}`, category.price)}
-                              className={`w-full text-left px-3 py-2 text-xs text-gray-600 ${hoverBg} border-t border-gray-100`}
-                            >
-                              {category.name} Block {String.fromCharCode(65 + i)} (₹{category.price?.toLocaleString()}.00)
-                            </button>
-                          ))}
-                        </div>
-                      )}
+                      </div>
                     </div>
-                  )
-                })}
+                                  )})}
+                </div>
               </div>
             </div>
 
@@ -537,11 +566,7 @@ export default function MatchDetailsPage() {
                     {/* Define wedge shape path generator */}
                   </defs>
                   
-                  {/* Outer Ring - Premium Suites Level 5 */}
-                  <circle cx="500" cy="500" r="430" fill="none" stroke="#D1D5DB" strokeWidth="2" />
-                  
-                  {/* Presidential Suites Level 4 */}
-                  <circle cx="500" cy="500" r="390" fill="none" stroke="#D1D5DB" strokeWidth="2" />
+                  {/* Stadium boundary circles - removed outer 2 */}
                   
                   {/* Presidential Gallery Level 3 */}
                   <circle cx="500" cy="500" r="350" fill="none" stroke="#D1D5DB" strokeWidth="2" />
@@ -620,6 +645,27 @@ export default function MatchDetailsPage() {
                                   
                                   const rowElements = []
                                   
+                                  {/* Row number label at inner edge */}
+                                  const rowNumAngle = startAngle + 1
+                                  const rowNumR = rowR - 3
+                                  const rowNumX = 500 + rowNumR * Math.cos(toRad(rowNumAngle))
+                                  const rowNumY = 500 + rowNumR * Math.sin(toRad(rowNumAngle))
+                                  rowElements.push(
+                                    <text
+                                      key={`rownum-${rowIdx}`}
+                                      x={rowNumX}
+                                      y={rowNumY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      fill="black"
+                                      fontSize="6"
+                                      fontWeight="bold"
+                                      className="pointer-events-none select-none"
+                                    >
+                                      {rowIdx + 1}
+                                    </text>
+                                  )
+                                  
                                   // Row arc line
                                   const lx = 500 + rowR * Math.cos(toRad(startAngle))
                                   const ly = 500 + rowR * Math.sin(toRad(startAngle))
@@ -628,13 +674,61 @@ export default function MatchDetailsPage() {
                                   const arcPath = `M ${lx} ${ly} A ${rowR} ${rowR} 0 0 1 ${rx} ${ry}`
                                   rowElements.push(<path key={`row-${rowIdx}`} d={arcPath} fill="none" stroke="white" strokeWidth="1" />)
                                   
-                                  // Seats in this row
+                                  // Seats in this row - with category colors
                                   for (let seatIdx = 0; seatIdx < maxSeats; seatIdx++) {
                                     const seatAngle = startAngle + (arcAngle * (seatIdx + 1)) / (maxSeats + 1)
                                     const seatX = 500 + rowR * Math.cos(toRad(seatAngle))
                                     const seatY = 500 + rowR * Math.sin(toRad(seatAngle))
                                     const seatId = `${sectionId}-R${rowIdx + 1}-${seatIdx + 1}`
                                     const isSelected = selectedSeats.includes(seatId)
+                                    const isSold = soldSeats.includes(seatId)
+                                    
+                                    // Get category color for this seat
+                                    const categoryColor = getSeatCategoryColor(sectionId, rowIdx + 1)
+                                    const isCategorySelected = selectedCategory && 
+                                      ((selectedCategory.name === 'VIP' && categoryColor === '#9C27B0') ||
+                                       (selectedCategory.name === 'Premium' && categoryColor === '#EC4899') ||
+                                       (selectedCategory.name === 'Gold' && categoryColor === '#EAB308') ||
+                                       (selectedCategory.name === 'Silver' && categoryColor === '#3B82F6') ||
+                                       (selectedCategory.name === 'General' && categoryColor === '#22C55E'))
+                                    
+                                    // Light colors by default, dark when category selected
+                                    const lightColors = {
+                                      '#9C27B0': '#E8D5F2', // VIP light purple
+                                      '#EC4899': '#FDF2F8', // Premium very light pink
+                                      '#EAB308': '#FDE68A', // Gold light yellow
+                                      '#3B82F6': '#BFDBFE', // Silver light blue
+                                      '#22C55E': '#86EFAC'  // General light green
+                                    }
+                                    
+                                    const darkColors = {
+                                      '#9C27B0': '#9C27B0', // VIP dark purple
+                                      '#EC4899': '#EC4899', // Premium dark pink
+                                      '#EAB308': '#EAB308', // Gold dark yellow
+                                      '#3B82F6': '#3B82F6', // Silver dark blue
+                                      '#22C55E': '#22C55E'  // General dark green
+                                    }
+                                    
+                                    let fillColor = lightColors[categoryColor] || 'white'
+                                    let strokeColor = categoryColor
+                                    
+                                    // If category is selected, show dark color
+                                    if (isCategorySelected) {
+                                      fillColor = darkColors[categoryColor]
+                                      strokeColor = darkColors[categoryColor]
+                                    }
+                                    
+                                    // If seat is sold - completely grey
+                                    if (isSold) {
+                                      fillColor = '#9CA3AF'
+                                      strokeColor = '#9CA3AF'
+                                    }
+                                    
+                                    // If seat is individually selected
+                                    if (isSelected) {
+                                      fillColor = '#F84464'
+                                      strokeColor = '#F84464'
+                                    }
                                     
                                     rowElements.push(
                                       <rect
@@ -643,11 +737,11 @@ export default function MatchDetailsPage() {
                                         y={seatY - seatSize/2}
                                         width={seatSize}
                                         height={seatSize}
-                                        fill={isSelected ? '#F84464' : 'white'}
-                                        stroke={isSelected ? '#F84464' : '#9CA3AF'}
-                                        strokeWidth="0.5"
+                                        fill={fillColor}
+                                        stroke={strokeColor}
+                                        strokeWidth={isSold ? "0" : "0.5"}
                                         rx="1"
-                                        className="cursor-pointer"
+                                        className={isSold ? '' : 'cursor-pointer'}
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           handleStadiumSeatSelect(seatId)
@@ -677,6 +771,515 @@ export default function MatchDetailsPage() {
                           }
                           
                           return firstRingSections
+                        })()}
+                        
+                        {/* SECOND RING - B Sections */}
+                        {(() => {
+                          const secondRingSections = []
+                          const sectionCount = 18
+                          const innerR = 165
+                          const outerR = 210
+                          const anglePerSection = 360 / sectionCount
+                          
+                          for (let i = 0; i < sectionCount; i++) {
+                            const startAngle = -180 + (i * anglePerSection) + 2
+                            const endAngle = startAngle + anglePerSection - 4
+                            const sectionId = `B${i + 1}`
+                            
+                            const toRad = (deg) => (deg * Math.PI) / 180
+                            const x1 = 500 + innerR * Math.cos(toRad(startAngle))
+                            const y1 = 500 + innerR * Math.sin(toRad(startAngle))
+                            const x2 = 500 + outerR * Math.cos(toRad(startAngle))
+                            const y2 = 500 + outerR * Math.sin(toRad(startAngle))
+                            const x3 = 500 + outerR * Math.cos(toRad(endAngle))
+                            const y3 = 500 + outerR * Math.sin(toRad(endAngle))
+                            const x4 = 500 + innerR * Math.cos(toRad(endAngle))
+                            const y4 = 500 + innerR * Math.sin(toRad(endAngle))
+                            const path = `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 0 0 ${x1} ${y1} Z`
+                            
+                            // Label between first and second ring (inner edge)
+                            const labelR = innerR - 4
+                            const midAngle = (startAngle + endAngle) / 2
+                            const labelX = 500 + labelR * Math.cos(toRad(midAngle))
+                            const labelY = 500 + labelR * Math.sin(toRad(midAngle))
+                            
+                            secondRingSections.push(
+                              <g key={sectionId}>
+                                {/* Section wedge */}
+                                <path
+                                  d={path}
+                                  fill="#A0A0A0"
+                                  stroke="white"
+                                  strokeWidth="2"
+                                />
+                                
+                                {/* Label between rings */}
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  fill="black"
+                                  fontSize="7"
+                                  fontWeight="bold"
+                                  className="pointer-events-none select-none"
+                                >
+                                  {sectionId}
+                                </text>
+                                
+                                {/* Row lines and seats - MORE SEATS per row */}
+                                {Array.from({ length: 5 }).map((_, rowIdx) => {
+                                  const rowR = innerR + (outerR - innerR) * ((rowIdx + 1) / 6)
+                                  const arcAngle = Math.abs(endAngle - startAngle)
+                                  const arcLength = (arcAngle * Math.PI / 180) * rowR
+                                  const seatSize = 8
+                                  // MORE seats since area is bigger
+                                  const maxSeats = Math.max(3, Math.min(9, Math.floor((arcLength - 10) / (seatSize + 2))))
+                                  
+                                  const rowElements = []
+                                  
+                                  {/* Row number label */}
+                                  const rowNumAngle = startAngle + 1
+                                  const rowNumR = rowR - 3
+                                  const rowNumX = 500 + rowNumR * Math.cos(toRad(rowNumAngle))
+                                  const rowNumY = 500 + rowNumR * Math.sin(toRad(rowNumAngle))
+                                  rowElements.push(
+                                    <text
+                                      key={`rownum-${rowIdx}`}
+                                      x={rowNumX}
+                                      y={rowNumY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      fill="black"
+                                      fontSize="6"
+                                      fontWeight="bold"
+                                      className="pointer-events-none select-none"
+                                    >
+                                      {rowIdx + 1}
+                                    </text>
+                                  )
+                                  
+                                  // Row arc line
+                                  const lx = 500 + rowR * Math.cos(toRad(startAngle))
+                                  const ly = 500 + rowR * Math.sin(toRad(startAngle))
+                                  const rx = 500 + rowR * Math.cos(toRad(endAngle))
+                                  const ry = 500 + rowR * Math.sin(toRad(endAngle))
+                                  const arcPath = `M ${lx} ${ly} A ${rowR} ${rowR} 0 0 1 ${rx} ${ry}`
+                                  rowElements.push(<path key={`row-${rowIdx}`} d={arcPath} fill="none" stroke="white" strokeWidth="1" />)
+                                  
+                                  // Seats in this row - with category colors
+                                  for (let seatIdx = 0; seatIdx < maxSeats; seatIdx++) {
+                                    const seatAngle = startAngle + (arcAngle * (seatIdx + 1)) / (maxSeats + 1)
+                                    const seatX = 500 + rowR * Math.cos(toRad(seatAngle))
+                                    const seatY = 500 + rowR * Math.sin(toRad(seatAngle))
+                                    const seatId = `${sectionId}-R${rowIdx + 1}-${seatIdx + 1}`
+                                    const isSelected = selectedSeats.includes(seatId)
+                                    const isSold = soldSeats.includes(seatId)
+                                    
+                                    // Get category color for this seat
+                                    const categoryColor = getSeatCategoryColor(sectionId, rowIdx + 1)
+                                    const isCategorySelected = selectedCategory && 
+                                      ((selectedCategory.name === 'VIP' && categoryColor === '#9C27B0') ||
+                                       (selectedCategory.name === 'Premium' && categoryColor === '#EC4899') ||
+                                       (selectedCategory.name === 'Gold' && categoryColor === '#EAB308') ||
+                                       (selectedCategory.name === 'Silver' && categoryColor === '#3B82F6') ||
+                                       (selectedCategory.name === 'General' && categoryColor === '#22C55E'))
+                                    
+                                    // Light colors by default, dark when category selected
+                                    const lightColors = {
+                                      '#9C27B0': '#E8D5F2', // VIP light purple
+                                      '#EC4899': '#FDF2F8', // Premium very light pink
+                                      '#EAB308': '#FDE68A', // Gold light yellow
+                                      '#3B82F6': '#BFDBFE', // Silver light blue
+                                      '#22C55E': '#86EFAC'  // General light green
+                                    }
+                                    
+                                    const darkColors = {
+                                      '#9C27B0': '#9C27B0', // VIP dark purple
+                                      '#EC4899': '#EC4899', // Premium dark pink
+                                      '#EAB308': '#EAB308', // Gold dark yellow
+                                      '#3B82F6': '#3B82F6', // Silver dark blue
+                                      '#22C55E': '#22C55E'  // General dark green
+                                    }
+                                    
+                                    let fillColor = lightColors[categoryColor] || 'white'
+                                    let strokeColor = categoryColor
+                                    
+                                    // If category is selected, show dark color
+                                    if (isCategorySelected) {
+                                      fillColor = darkColors[categoryColor]
+                                      strokeColor = darkColors[categoryColor]
+                                    }
+                                    
+                                    // If seat is sold - completely grey
+                                    if (isSold) {
+                                      fillColor = '#9CA3AF'
+                                      strokeColor = '#9CA3AF'
+                                    }
+                                    
+                                    // If seat is individually selected
+                                    if (isSelected) {
+                                      fillColor = '#F84464'
+                                      strokeColor = '#F84464'
+                                    }
+                                    
+                                    rowElements.push(
+                                      <rect
+                                        key={seatId}
+                                        x={seatX - seatSize/2}
+                                        y={seatY - seatSize/2}
+                                        width={seatSize}
+                                        height={seatSize}
+                                        fill={fillColor}
+                                        stroke={strokeColor}
+                                        strokeWidth={isSold ? "0" : "0.5"}
+                                        rx="1"
+                                        className={isSold ? '' : 'cursor-pointer'}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleStadiumSeatSelect(seatId)
+                                        }}
+                                      />
+                                    )
+                                  }
+                                  
+                                  return <g key={`row-group-${rowIdx}`}>{rowElements}</g>
+                                })}
+                              </g>
+                            )
+                          }
+                          
+                          return secondRingSections
+                        })()}
+                        
+                        {/* THIRD RING - C Sections */}
+                        {(() => {
+                          const thirdRingSections = []
+                          const sectionCount = 20
+                          const innerR = 215
+                          const outerR = 270
+                          const anglePerSection = 360 / sectionCount
+                          
+                          for (let i = 0; i < sectionCount; i++) {
+                            const startAngle = -180 + (i * anglePerSection) + 2
+                            const endAngle = startAngle + anglePerSection - 4
+                            const sectionId = `C${i + 1}`
+                            
+                            const toRad = (deg) => (deg * Math.PI) / 180
+                            const x1 = 500 + innerR * Math.cos(toRad(startAngle))
+                            const y1 = 500 + innerR * Math.sin(toRad(startAngle))
+                            const x2 = 500 + outerR * Math.cos(toRad(startAngle))
+                            const y2 = 500 + outerR * Math.sin(toRad(startAngle))
+                            const x3 = 500 + outerR * Math.cos(toRad(endAngle))
+                            const y3 = 500 + outerR * Math.sin(toRad(endAngle))
+                            const x4 = 500 + innerR * Math.cos(toRad(endAngle))
+                            const y4 = 500 + innerR * Math.sin(toRad(endAngle))
+                            const path = `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 0 0 ${x1} ${y1} Z`
+                            
+                            // Label between second and third ring (inner edge)
+                            const labelR = innerR - 5
+                            const midAngle = (startAngle + endAngle) / 2
+                            const labelX = 500 + labelR * Math.cos(toRad(midAngle))
+                            const labelY = 500 + labelR * Math.sin(toRad(midAngle))
+                            
+                            thirdRingSections.push(
+                              <g key={sectionId}>
+                                {/* Section wedge */}
+                                <path
+                                  d={path}
+                                  fill="#808080"
+                                  stroke="white"
+                                  strokeWidth="2"
+                                />
+                                
+                                {/* Label between rings - smaller font to fit */}
+                                <text
+                                  x={labelX}
+                                  y={labelY}
+                                  textAnchor="middle"
+                                  dominantBaseline="middle"
+                                  fill="black"
+                                  fontSize="6"
+                                  fontWeight="bold"
+                                  className="pointer-events-none select-none"
+                                >
+                                  {sectionId}
+                                </text>
+                                
+                                {/* Row lines and seats - EVEN MORE SEATS */}
+                                {Array.from({ length: 6 }).map((_, rowIdx) => {
+                                  const rowR = innerR + (outerR - innerR) * ((rowIdx + 1) / 7)
+                                  const arcAngle = Math.abs(endAngle - startAngle)
+                                  const arcLength = (arcAngle * Math.PI / 180) * rowR
+                                  const seatSize = 8
+                                  // MORE seats since area is bigger
+                                  const maxSeats = Math.max(4, Math.min(12, Math.floor((arcLength - 8) / (seatSize + 2))))
+                                  
+                                  const rowElements = []
+                                  
+                                  {/* Row number label */}
+                                  const rowNumAngle = startAngle + 1
+                                  const rowNumR = rowR - 3
+                                  const rowNumX = 500 + rowNumR * Math.cos(toRad(rowNumAngle))
+                                  const rowNumY = 500 + rowNumR * Math.sin(toRad(rowNumAngle))
+                                  rowElements.push(
+                                    <text
+                                      key={`rownum-${rowIdx}`}
+                                      x={rowNumX}
+                                      y={rowNumY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      fill="black"
+                                      fontSize="5"
+                                      fontWeight="bold"
+                                      className="pointer-events-none select-none"
+                                    >
+                                      {rowIdx + 1}
+                                    </text>
+                                  )
+                                  
+                                  // Row arc line
+                                  const lx = 500 + rowR * Math.cos(toRad(startAngle))
+                                  const ly = 500 + rowR * Math.sin(toRad(startAngle))
+                                  const rx = 500 + rowR * Math.cos(toRad(endAngle))
+                                  const ry = 500 + rowR * Math.sin(toRad(endAngle))
+                                  const arcPath = `M ${lx} ${ly} A ${rowR} ${rowR} 0 0 1 ${rx} ${ry}`
+                                  rowElements.push(<path key={`row-${rowIdx}`} d={arcPath} fill="none" stroke="white" strokeWidth="1" />)
+                                  
+                                  // Seats in this row - with category colors
+                                  for (let seatIdx = 0; seatIdx < maxSeats; seatIdx++) {
+                                    const seatAngle = startAngle + (arcAngle * (seatIdx + 1)) / (maxSeats + 1)
+                                    const seatX = 500 + rowR * Math.cos(toRad(seatAngle))
+                                    const seatY = 500 + rowR * Math.sin(toRad(seatAngle))
+                                    const seatId = `${sectionId}-R${rowIdx + 1}-${seatIdx + 1}`
+                                    const isSelected = selectedSeats.includes(seatId)
+                                    const isSold = soldSeats.includes(seatId)
+                                    
+                                    // Get category color for this seat
+                                    const categoryColor = getSeatCategoryColor(sectionId, rowIdx + 1)
+                                    const isCategorySelected = selectedCategory && 
+                                      ((selectedCategory.name === 'VIP' && categoryColor === '#9C27B0') ||
+                                       (selectedCategory.name === 'Premium' && categoryColor === '#EC4899') ||
+                                       (selectedCategory.name === 'Gold' && categoryColor === '#EAB308') ||
+                                       (selectedCategory.name === 'Silver' && categoryColor === '#3B82F6') ||
+                                       (selectedCategory.name === 'General' && categoryColor === '#22C55E'))
+                                    
+                                    // Light colors by default, dark when category selected
+                                    const lightColors = {
+                                      '#9C27B0': '#E8D5F2', // VIP light purple
+                                      '#EC4899': '#FDF2F8', // Premium very light pink
+                                      '#EAB308': '#FDE68A', // Gold light yellow
+                                      '#3B82F6': '#BFDBFE', // Silver light blue
+                                      '#22C55E': '#86EFAC'  // General light green
+                                    }
+                                    
+                                    const darkColors = {
+                                      '#9C27B0': '#9C27B0', // VIP dark purple
+                                      '#EC4899': '#EC4899', // Premium dark pink
+                                      '#EAB308': '#EAB308', // Gold dark yellow
+                                      '#3B82F6': '#3B82F6', // Silver dark blue
+                                      '#22C55E': '#22C55E'  // General dark green
+                                    }
+                                    
+                                    let fillColor = lightColors[categoryColor] || 'white'
+                                    let strokeColor = categoryColor
+                                    
+                                    // If category is selected, show dark color
+                                    if (isCategorySelected) {
+                                      fillColor = darkColors[categoryColor]
+                                      strokeColor = darkColors[categoryColor]
+                                    }
+                                    
+                                    // If seat is sold - completely grey
+                                    if (isSold) {
+                                      fillColor = '#9CA3AF'
+                                      strokeColor = '#9CA3AF'
+                                    }
+                                    
+                                    // If seat is individually selected
+                                    if (isSelected) {
+                                      fillColor = '#F84464'
+                                      strokeColor = '#F84464'
+                                    }
+                                    
+                                    rowElements.push(
+                                      <rect
+                                        key={seatId}
+                                        x={seatX - seatSize/2}
+                                        y={seatY - seatSize/2}
+                                        width={seatSize}
+                                        height={seatSize}
+                                        fill={fillColor}
+                                        stroke={strokeColor}
+                                        strokeWidth={isSold ? "0" : "0.5"}
+                                        rx="1"
+                                        className={isSold ? '' : 'cursor-pointer'}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleStadiumSeatSelect(seatId)
+                                        }}
+                                      />
+                                    )
+                                  }
+                                  
+                                  return <g key={`row-group-${rowIdx}`}>{rowElements}</g>
+                                })}
+                              </g>
+                            )
+                          }
+                          
+                          return thirdRingSections
+                        })()}
+                        
+                        {/* FOURTH RING - D Sections */}
+                        {(() => {
+                          const fourthRingSections = []
+                          const sectionCount = 22
+                          const innerR = 275
+                          const outerR = 340
+                          const anglePerSection = 360 / sectionCount
+                          
+                          for (let i = 0; i < sectionCount; i++) {
+                            const startAngle = -180 + (i * anglePerSection) + 2
+                            const endAngle = startAngle + anglePerSection - 4
+                            const sectionId = `D${i + 1}`
+                            
+                            const toRad = (deg) => (deg * Math.PI) / 180
+                            const x1 = 500 + innerR * Math.cos(toRad(startAngle))
+                            const y1 = 500 + innerR * Math.sin(toRad(startAngle))
+                            const x2 = 500 + outerR * Math.cos(toRad(startAngle))
+                            const y2 = 500 + outerR * Math.sin(toRad(startAngle))
+                            const x3 = 500 + outerR * Math.cos(toRad(endAngle))
+                            const y3 = 500 + outerR * Math.sin(toRad(endAngle))
+                            const x4 = 500 + innerR * Math.cos(toRad(endAngle))
+                            const y4 = 500 + innerR * Math.sin(toRad(endAngle))
+                            const path = `M ${x1} ${y1} L ${x2} ${y2} A ${outerR} ${outerR} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${innerR} ${innerR} 0 0 0 ${x1} ${y1} Z`
+                            
+                            const labelR = innerR - 5
+                            const midAngle = (startAngle + endAngle) / 2
+                            const labelX = 500 + labelR * Math.cos(toRad(midAngle))
+                            const labelY = 500 + labelR * Math.sin(toRad(midAngle))
+                            
+                            fourthRingSections.push(
+                              <g key={sectionId}>
+                                <path d={path} fill="#606060" stroke="white" strokeWidth="2" />
+                                <text x={labelX} y={labelY} textAnchor="middle" dominantBaseline="middle" fill="black" fontSize="6" fontWeight="bold" className="pointer-events-none select-none">{sectionId}</text>
+                                {Array.from({ length: 7 }).map((_, rowIdx) => {
+                                  const rowR = innerR + (outerR - innerR) * ((rowIdx + 1) / 8)
+                                  const arcAngle = Math.abs(endAngle - startAngle)
+                                  const arcLength = (arcAngle * Math.PI / 180) * rowR
+                                  const seatSize = 8
+                                  const maxSeats = Math.max(5, Math.min(14, Math.floor((arcLength - 8) / (seatSize + 2))))
+                                  const rowElements = []
+                                  const lx = 500 + rowR * Math.cos(toRad(startAngle))
+                                  const ly = 500 + rowR * Math.sin(toRad(startAngle))
+                                  const rx = 500 + rowR * Math.cos(toRad(endAngle))
+                                  const ry = 500 + rowR * Math.sin(toRad(endAngle))
+                                  
+                                  {/* Row number label */}
+                                  const rowNumAngle = startAngle + 1
+                                  const rowNumR = rowR + 6
+                                  const rowNumX = 500 + rowNumR * Math.cos(toRad(rowNumAngle))
+                                  const rowNumY = 500 + rowNumR * Math.sin(toRad(rowNumAngle))
+                                  rowElements.push(
+                                    <text
+                                      key={`rownum-${rowIdx}`}
+                                      x={rowNumX}
+                                      y={rowNumY}
+                                      textAnchor="middle"
+                                      dominantBaseline="middle"
+                                      fill="black"
+                                      fontSize="5"
+                                      fontWeight="bold"
+                                      className="pointer-events-none select-none"
+                                    >
+                                      {rowIdx + 1}
+                                    </text>
+                                  )
+                                  
+                                  rowElements.push(<path key={`row-${rowIdx}`} d={`M ${lx} ${ly} A ${rowR} ${rowR} 0 0 1 ${rx} ${ry}`} fill="none" stroke="white" strokeWidth="1" />)
+                                  
+                                  // Seats in this row - with category colors
+                                  for (let seatIdx = 0; seatIdx < maxSeats; seatIdx++) {
+                                    const seatAngle = startAngle + (arcAngle * (seatIdx + 1)) / (maxSeats + 1)
+                                    const seatX = 500 + rowR * Math.cos(toRad(seatAngle))
+                                    const seatY = 500 + rowR * Math.sin(toRad(seatAngle))
+                                    const seatId = `${sectionId}-R${rowIdx + 1}-${seatIdx + 1}`
+                                    const isSelected = selectedSeats.includes(seatId)
+                                    const isSold = soldSeats.includes(seatId)
+                                    
+                                    // Get category color for this seat
+                                    const categoryColor = getSeatCategoryColor(sectionId, rowIdx + 1)
+                                    const isCategorySelected = selectedCategory && 
+                                      ((selectedCategory.name === 'VIP' && categoryColor === '#9C27B0') ||
+                                       (selectedCategory.name === 'Premium' && categoryColor === '#EC4899') ||
+                                       (selectedCategory.name === 'Gold' && categoryColor === '#EAB308') ||
+                                       (selectedCategory.name === 'Silver' && categoryColor === '#3B82F6') ||
+                                       (selectedCategory.name === 'General' && categoryColor === '#22C55E'))
+                                    
+                                    // Light colors by default, dark when category selected
+                                    const lightColors = {
+                                      '#9C27B0': '#E8D5F2', // VIP light purple
+                                      '#EC4899': '#FBCFE8', // Premium light pink
+                                      '#EAB308': '#FDE68A', // Gold light yellow
+                                      '#3B82F6': '#BFDBFE', // Silver light blue
+                                      '#22C55E': '#86EFAC'  // General light green
+                                    }
+                                    
+                                    const darkColors = {
+                                      '#9C27B0': '#9C27B0', // VIP dark purple
+                                      '#EC4899': '#EC4899', // Premium dark pink
+                                      '#EAB308': '#EAB308', // Gold dark yellow
+                                      '#3B82F6': '#3B82F6', // Silver dark blue
+                                      '#22C55E': '#22C55E'  // General dark green
+                                    }
+                                    
+                                    let fillColor = lightColors[categoryColor] || 'white'
+                                    let strokeColor = categoryColor
+                                    
+                                    // If category is selected, show dark color
+                                    if (isCategorySelected) {
+                                      fillColor = darkColors[categoryColor]
+                                      strokeColor = darkColors[categoryColor]
+                                    }
+                                    
+                                    // If seat is sold - completely grey
+                                    if (isSold) {
+                                      fillColor = '#9CA3AF'
+                                      strokeColor = '#9CA3AF'
+                                    }
+                                    
+                                    // If seat is individually selected
+                                    if (isSelected) {
+                                      fillColor = '#F84464'
+                                      strokeColor = '#F84464'
+                                    }
+                                    
+                                    rowElements.push(
+                                      <rect
+                                        key={seatId}
+                                        x={seatX - seatSize/2}
+                                        y={seatY - seatSize/2}
+                                        width={seatSize}
+                                        height={seatSize}
+                                        fill={fillColor}
+                                        stroke={strokeColor}
+                                        strokeWidth={isSold ? "0" : "0.5"}
+                                        rx="1"
+                                        className={isSold ? '' : 'cursor-pointer'}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleStadiumSeatSelect(seatId)
+                                        }}
+                                      />
+                                    )
+                                  }
+                                  return <g key={`row-group-${rowIdx}`}>{rowElements}</g>
+                                })}
+                              </g>
+                            )
+                          }
+                          return fourthRingSections
                         })()}
                       </>
                     )
