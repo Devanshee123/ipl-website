@@ -24,20 +24,10 @@ const app = express()
 app.use(helmet())
 app.use(compression())
 app.use(cors({
-  origin: function(origin, callback) {
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:5173',
-      'https://ipl-website-frontend.onrender.com'
-    ].filter(Boolean)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
+  origin: true,
   credentials: true
 }))
+
 // Increase limit to 10MB for image uploads
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
